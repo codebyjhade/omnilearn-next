@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // 🚀 Added this missing import!
 import { supabase } from "../../lib/supabaseClient";
 import { UploadCloud, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
   const [username, setUsername] = useState<string>("Loading...");
+  const router = useRouter(); // Moved up here to group with other state/hooks
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -21,6 +23,17 @@ export default function Home() {
     };
     fetchUser();
   }, []);
+
+  // THE BOUNCER: If NOT logged in, kick back to landing page
+  useEffect(() => {
+    const enforceAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/');
+      }
+    };
+    enforceAuth();
+  }, [router]);
 
   return (
     <div className="flex flex-col w-full px-6 pt-12 pb-24 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
