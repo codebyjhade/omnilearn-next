@@ -1,21 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useTheme } from "next-themes";
 import { 
   Sparkles, ArrowRight, BookOpen, BrainCircuit, Target, 
   Upload, BarChart2, BookOpenText, Flame, Home, User, 
-  FileText, X, Settings, CreditCard, Bell, LogIn, UploadCloud
+  FileText, X, Settings, CreditCard, Bell, UploadCloud,
+  Trash2, TrendingUp, Clock, AlertCircle, Sun, Moon, LogIn
 } from "lucide-react";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
+import { supabase } from "../lib/supabaseClient";
 
 export default function InteractiveLandingPage() {
   const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
   const [activeTab, setActiveTab] = useState("home");
   const [guestFile, setGuestFile] = useState<File | null>(null);
 
-  // Bouncer: If they are ALREADY a real logged-in user, send them to the real dashboard route.
-  // (Assuming your protected dashboard is at /home or /dashboard)
+  // Mount check for themes/recharts hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Bouncer: If they are ALREADY a real logged-in user, send them to the real dashboard.
   useEffect(() => {
     async function checkSession() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,29 +53,61 @@ export default function InteractiveLandingPage() {
     { id: 'mock-3', file_path: 'user_Macroeconomics_Midterm.pdf', flashcards: [{front: 'Supply and Demand'}, {front: 'Inflation'}, {front: 'Fiscal Policy'}] }
   ];
 
+  const chartData = [
+    { subject: "Core Concepts", score: 0 },
+    { subject: "Theory", score: 0 },
+    { subject: "Application", score: 0 },
+    { subject: "Definitions", score: 0 },
+  ];
+
   const currentLevel = Math.floor(xp / 500) + 1;
   const currentLevelXp = xp % 500;
   const xpProgress = (currentLevelXp / 500) * 100;
 
-  // Helper functions
   const getCleanTitle = (path: string) => path.split('_').slice(1).join('_').replace('.pdf', '');
   const getTopics = (flashcards: any) => flashcards.map((f: any) => f.front).join(' · ');
+
+  // Dynamic colors for the Progress Radar Chart lines
+  const gridStroke = mounted && resolvedTheme === 'dark' ? '#1e293b' : '#f1f5f9';
+  const tickFill = mounted && resolvedTheme === 'dark' ? '#94a3b8' : '#64748b';
 
   // ==========================================
   // THE TRAPDOOR: Hijacks clicks and demands Auth
   // ==========================================
   const requireAuth = (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     router.push('/login'); 
   };
+
+  // ==========================================
+  // APP NAVIGATION COMPONENTS
+  // ==========================================
+  const navItems = [
+    { name: "Home", id: "home", icon: Home },
+    { name: "Upload", id: "upload", icon: Upload },
+    { name: "Library", id: "library", icon: BookOpen },
+    { name: "Progress", id: "progress", icon: BarChart2 },
+    { name: "Profile", id: "profile", icon: User },
+  ];
+
+  const ThemeToggleMock = () => (
+    <button 
+      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} 
+      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+    >
+      {mounted && resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+    </button>
+  );
 
   // ==========================================
   // TAB COMPONENTS (The App Simulations)
   // ==========================================
 
   const renderHomeTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500">
-      {/* Gamified Welcome Header */}
+    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-5xl mx-auto px-6 pt-6 pb-24">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-6 md:space-y-0">
         <div>
           <p className="text-slate-500 dark:text-slate-400 font-medium">Welcome to OmniLearn,</p>
@@ -73,7 +116,6 @@ export default function InteractiveLandingPage() {
           </h1>
         </div>
         
-        {/* Level & Streak Badges */}
         <div className="flex items-center space-x-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex items-center space-x-3 shadow-sm">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-orange-100 dark:bg-orange-900/30 text-orange-500">
@@ -101,7 +143,6 @@ export default function InteractiveLandingPage() {
         </div>
       </div>
 
-      {/* Classic Stats Row */}
       <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
         <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm">
           <BookOpen className="text-violet-500 dark:text-violet-400 mb-2 md:w-8 md:h-8" size={20} />
@@ -120,7 +161,6 @@ export default function InteractiveLandingPage() {
         </div>
       </div>
 
-      {/* Upload Call to Action - Routes to the Mock Upload Tab */}
       <div onClick={() => setActiveTab('upload')} className="cursor-pointer bg-violet-600 dark:bg-violet-700 rounded-3xl p-8 md:p-10 text-white shadow-lg relative overflow-hidden mb-10 border border-violet-500 dark:border-violet-600 group">
         <div className="absolute -right-10 -top-10 opacity-20 group-hover:scale-110 transition-transform duration-700">
           <Sparkles size={200} />
@@ -139,7 +179,6 @@ export default function InteractiveLandingPage() {
         </div>
       </div>
 
-      {/* Recent Materials - Clicking any triggers Auth Trapdoor */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4 px-2">
           <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Recent Activity</h3>
@@ -171,7 +210,7 @@ export default function InteractiveLandingPage() {
   );
 
   const renderUploadTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto">
+    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto px-6 pt-6 pb-24">
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Upload Material</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Transform any PDF into an interactive study session.</p>
@@ -179,7 +218,6 @@ export default function InteractiveLandingPage() {
 
       {!guestFile ? (
         <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-10 py-24 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group relative cursor-pointer shadow-sm">
-          {/* We let them pick a file for the illusion, but process nothing yet */}
           <input 
             type="file" 
             accept=".pdf" 
@@ -214,7 +252,7 @@ export default function InteractiveLandingPage() {
           {/* THE TRAPDOOR IS HERE! */}
           <button 
             onClick={requireAuth} 
-            className="w-full py-5 bg-violet-600 dark:bg-violet-700 text-white font-bold rounded-2xl shadow-md hover:bg-violet-700 flex justify-center items-center group"
+            className="w-full py-5 bg-violet-600 dark:bg-violet-700 text-white font-bold rounded-2xl shadow-md hover:bg-violet-700 flex justify-center items-center group transition-colors"
           >
             Generate Study Kit <Sparkles size={18} className="ml-2 group-hover:animate-pulse" />
           </button>
@@ -223,120 +261,271 @@ export default function InteractiveLandingPage() {
     </div>
   );
 
-  const renderMockLibrary = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500">
-      <div className="mb-8">
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Your Library</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">All your generated study materials in one place.</p>
+  const renderLibraryTab = () => (
+    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto px-6 pt-6 pb-24">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Library</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">All your processed study materials</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[...recentNotes, ...recentNotes].map((note, idx) => (
-          <div onClick={requireAuth} key={idx} className="p-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:border-violet-300 cursor-pointer transition-all">
-            <div className="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-xl flex items-center justify-center text-violet-500 mb-4">
-              <BookOpenText size={20} />
+
+      <div className="flex flex-col space-y-4">
+        {recentNotes.map((note) => (
+          <div onClick={requireAuth} key={note.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800 transition-all cursor-pointer">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 transition-colors">
+                <FileText size={20} />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate max-w-[180px]">
+                  {getCleanTitle(note.file_path)}
+                </span>
+                <div className="flex items-center mt-1">
+                  <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider rounded-md transition-colors">
+                    Ready
+                  </span>
+                </div>
+              </div>
             </div>
-            <h3 className="font-bold text-slate-900 dark:text-slate-50 truncate">{getCleanTitle(note.file_path)}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-2">{getTopics(note.flashcards)}</p>
+            <button 
+              onClick={requireAuth}
+              className="p-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 transition-colors z-10"
+            >
+              <Trash2 size={18} />
+            </button>
           </div>
         ))}
       </div>
     </div>
   );
 
-  const renderMockProfile = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-2xl mx-auto">
-      <div className="flex items-center space-x-6 mb-10 p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-        <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-black">
+  const renderProgressTab = () => (
+    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto px-6 pt-6 pb-24">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Progress</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Track your study journey</p>
+      </div>
+
+      <div className="bg-violet-600 dark:bg-violet-700 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden mb-4 border border-violet-500 dark:border-violet-600">
+        <div className="flex flex-col items-center justify-center text-center relative z-10 py-4">
+          <span className="text-[10px] font-bold tracking-widest text-violet-200 uppercase mb-2">Readiness Score</span>
+          <h2 className="text-6xl font-extrabold tracking-tighter mb-2">0%</h2>
+          <p className="text-sm font-medium text-violet-200">Take a quiz to see your score</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+          <TrendingUp size={16} className="text-slate-400 dark:text-slate-500 mb-2" />
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Average</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+          <Target size={16} className="text-slate-400 dark:text-slate-500 mb-2" />
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Best Score</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+          <Clock size={16} className="text-slate-400 dark:text-slate-500 mb-2" />
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0s</span>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Study Time</span>
+        </div>
+      </div>
+
+      <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-5 mb-6 flex items-start space-x-3 transition-colors">
+        <AlertCircle size={20} className="text-orange-500 dark:text-orange-400 shrink-0 mt-0.5" />
+        <div>
+          <h3 className="text-sm font-bold text-orange-800 dark:text-orange-400">No data available yet</h3>
+          <p className="text-xs font-medium text-orange-600 dark:text-orange-500/80 mt-1">
+            Complete quizzes in the Library tab to start tracking your subject mastery.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm mb-6 opacity-50 transition-colors">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50 mb-4">Subject Mastery</h3>
+        <div className="h-[250px] w-full mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
+              <PolarGrid stroke={gridStroke} />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: tickFill, fontSize: 10, fontWeight: 500 }} />
+              <Radar name="Student" dataKey="score" stroke="#8b5cf6" strokeWidth={2} fill="#8b5cf6" fillOpacity={0.2} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderProfileTab = () => (
+    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-2xl mx-auto px-6 pt-6 pb-24">
+      <div className="flex flex-col items-center justify-center pt-6 mb-8">
+        <div className="w-24 h-24 bg-violet-600 dark:bg-violet-700 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg mb-4 uppercase transition-colors">
           G
         </div>
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-50">{username}</h1>
-          <p className="text-sm text-emerald-500 font-bold mt-1">Free Explorer Plan</p>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{username}</h2>
+        <p className="text-sm text-emerald-500 font-bold mt-1">Free Explorer Plan</p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+          <BookOpen size={16} className="text-violet-500 dark:text-violet-400 mb-2" />
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">{docCount}</span>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Documents</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+          <BrainCircuit size={16} className="text-emerald-500 dark:text-emerald-400 mb-2" />
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0</span>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Quizzes</span>
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+          <Target size={16} className="text-orange-500 dark:text-orange-400 mb-2" />
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
+          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Avg Score</span>
         </div>
       </div>
-      <div className="space-y-3">
-        <div onClick={requireAuth} className="flex items-center justify-between p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-violet-300 transition-colors">
-          <div className="flex items-center space-x-4 text-slate-700 dark:text-slate-300"><Settings size={20}/> <span className="font-bold">Account Settings</span></div>
-          <ArrowRight size={16} className="text-slate-400" />
-        </div>
-        <div onClick={requireAuth} className="flex items-center justify-between p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-violet-300 transition-colors">
-          <div className="flex items-center space-x-4 text-slate-700 dark:text-slate-300"><CreditCard size={20}/> <span className="font-bold">Upgrade to Premium</span></div>
-          <ArrowRight size={16} className="text-slate-400" />
-        </div>
-        <div onClick={requireAuth} className="flex items-center justify-between p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-violet-300 transition-colors">
-          <div className="flex items-center space-x-4 text-slate-700 dark:text-slate-300"><Bell size={20}/> <span className="font-bold">Notifications</span></div>
-          <ArrowRight size={16} className="text-slate-400" />
+
+      <div className="mb-6">
+        <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-3 px-2">Account</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm transition-colors">
+          <div onClick={requireAuth} className="flex items-center space-x-4 p-5 border-b border-slate-50 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <Settings size={20} className="text-slate-400 dark:text-slate-500" />
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Account Settings</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Manage your preferences</span>
+            </div>
+          </div>
+          <div onClick={requireAuth} className="flex items-center space-x-4 p-5 border-b border-slate-50 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <CreditCard size={20} className="text-slate-400 dark:text-slate-500" />
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Upgrade Plan</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Unlock premium features</span>
+            </div>
+          </div>
         </div>
       </div>
-      <button onClick={requireAuth} className="mt-8 w-full py-4 text-center font-bold text-white bg-slate-900 dark:bg-emerald-500 rounded-2xl shadow-md">
-        Create Your Free Account
+
+      <div className="mb-8">
+        <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-3 px-2">Notifications</h3>
+        <div onClick={requireAuth} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <div className="flex items-center space-x-4 p-5">
+            <Bell size={20} className="text-slate-500 dark:text-slate-400" />
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Daily Practice Reminders</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Not set up yet</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button 
+        onClick={requireAuth}
+        className="flex items-center justify-center space-x-3 p-5 bg-violet-600 dark:bg-violet-700 rounded-3xl w-full shadow-md hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors"
+      >
+        <span className="text-sm font-bold text-white">Create Free Account</span>
       </button>
     </div>
   );
 
-
-  // ==========================================
-  // NAVIGATION HELPERS
-  // ==========================================
-  const navItems = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'upload', icon: UploadCloud, label: 'Upload' },
-    { id: 'library', icon: BookOpen, label: 'Library' },
-    { id: 'progress', icon: BarChart2, label: 'Progress' },
-    { id: 'profile', icon: User, label: 'Profile' },
-  ];
-
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0a0f1c] text-slate-900 dark:text-slate-50 font-sans transition-colors duration-300 pb-24 md:pb-0 md:pt-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
       
-      {/* DESKTOP TOP NAV */}
-      <nav className="hidden md:flex fixed top-0 w-full items-center justify-between px-10 py-4 border-b border-slate-200 dark:border-slate-800/50 bg-white/70 dark:bg-[#0a0f1c]/70 backdrop-blur-xl z-50">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('home')}>
-          <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
-            <BrainCircuit className="text-violet-500" size={18} />
-          </div>
-          <span className="text-xl font-black tracking-tight">OmniLearn.</span>
+      {/* ================= DESKTOP TOP NAVIGATION ================= */}
+      <div className="hidden md:flex fixed top-0 w-full bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-8 py-4 z-50 justify-between items-center shadow-sm transition-colors duration-300">
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
+          <Image 
+            src="/OmniLearn.jpg" 
+            alt="OmniLearn Logo" 
+            width={32} 
+            height={32} 
+            className="rounded-lg object-cover"
+            priority 
+          />
+          <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-slate-50">OmniLearn</span>
         </div>
         
         <div className="flex items-center space-x-8">
-          {navItems.map((item) => (
+          <div className="flex space-x-8">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              const Icon = item.icon;
+              return (
+                <button 
+                  key={item.id} 
+                  onClick={() => setActiveTab(item.id)}
+                  className="flex items-center space-x-2 group focus:outline-none"
+                >
+                  <Icon size={18} className={`transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-violet-400 dark:group-hover:text-violet-300'}`} />
+                  <span className={`text-sm font-bold transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-violet-500 dark:group-hover:text-violet-300'}`}>
+                    {item.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          
+          <div className="pl-6 border-l border-slate-200 dark:border-slate-800 flex items-center space-x-4">
+            <ThemeToggleMock />
+            <button 
+              onClick={requireAuth} 
+              className="flex items-center px-5 py-2 bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-widest rounded-full shadow-md hover:scale-105 transition-transform"
+            >
+              Sign In <LogIn size={14} className="ml-2" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= MOBILE TOP HEADER ================= */}
+      <div className="md:hidden fixed top-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-50 transition-colors duration-300">
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
+          <Image 
+            src="/OmniLearn.jpg" 
+            alt="OmniLearn Logo" 
+            width={28} 
+            height={28} 
+            className="rounded-lg object-cover"
+          />
+          <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-slate-50">OmniLearn</span>
+        </div>
+        <div className="flex items-center space-x-3">
+          <ThemeToggleMock />
+        </div>
+      </div>
+
+      {/* Spacer to prevent content hiding under fixed navs */}
+      <div className="h-20 w-full" />
+
+      {/* MAIN CONTENT AREA */}
+      <main className="w-full">
+        {activeTab === 'home' && renderHomeTab()}
+        {activeTab === 'upload' && renderUploadTab()}
+        {activeTab === 'library' && renderLibraryTab()}
+        {activeTab === 'progress' && renderProgressTab()} 
+        {activeTab === 'profile' && renderProfileTab()}
+      </main>
+
+      {/* ================= MOBILE BOTTOM NAVIGATION ================= */}
+      <div className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] dark:shadow-none transition-colors duration-300 pb-safe">
+        {navItems.map((item) => {
+          const isActive = activeTab === item.id;
+          const Icon = item.icon;
+          return (
             <button 
               key={item.id} 
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center space-x-2 text-sm font-bold transition-colors ${activeTab === item.id ? 'text-violet-600 dark:text-violet-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'}`}
+              className="flex flex-col items-center gap-1 relative w-12 focus:outline-none"
             >
-              <item.icon size={16} /> <span>{item.label}</span>
+              {isActive && (
+                <span className="absolute -top-3 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full" />
+              )}
+              <Icon size={22} className={`transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`} />
+              <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                {item.name}
+              </span>
             </button>
-          ))}
-        </div>
-
-        <button onClick={requireAuth} className="flex items-center px-5 py-2.5 bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-widest rounded-full shadow-lg hover:scale-105 transition-transform">
-          Sign In <LogIn size={14} className="ml-2" />
-        </button>
-      </nav>
-
-      {/* MAIN CONTENT AREA */}
-      <main className="w-full max-w-5xl mx-auto px-6 py-8">
-        {activeTab === 'home' && renderHomeTab()}
-        {activeTab === 'upload' && renderUploadTab()}
-        {activeTab === 'library' && renderMockLibrary()}
-        {activeTab === 'progress' && renderHomeTab()} {/* Routing progress back to dashboard visual for brevity */}
-        {activeTab === 'profile' && renderMockProfile()}
-      </main>
-
-      {/* MOBILE BOTTOM NAV */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-white dark:bg-[#0a0f1c] border-t border-slate-200 dark:border-slate-800/50 pb-safe pt-2 px-6 flex justify-between items-center z-50">
-        {navItems.map((item) => (
-          <button 
-            key={item.id} 
-            onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center p-2 transition-colors ${activeTab === item.id ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}
-          >
-            <item.icon size={22} className="mb-1" />
-            <span className="text-[10px] font-bold">{item.label}</span>
-          </button>
-        ))}
-      </nav>
+          );
+        })}
+      </div>
       
     </div>
   );
