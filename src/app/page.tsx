@@ -8,7 +8,8 @@ import {
   Sparkles, ArrowRight, BookOpen, BrainCircuit, Target, 
   Upload, BarChart2, BookOpenText, Flame, Home, User, 
   FileText, X, Settings, CreditCard, Bell, UploadCloud,
-  Trash2, TrendingUp, Clock, AlertCircle, Sun, Moon, LogIn
+  Trash2, TrendingUp, Clock, AlertCircle, Sun, Moon, LogIn,
+  Shield, LogOut
 } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { supabase } from "../lib/supabaseClient";
@@ -21,7 +22,7 @@ export default function InteractiveLandingPage() {
   const [activeTab, setActiveTab] = useState("home");
   const [guestFile, setGuestFile] = useState<File | null>(null);
 
-  // Mount check for themes/recharts hydration
+  // Prevent hydration mismatch for themes/recharts
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -41,6 +42,7 @@ export default function InteractiveLandingPage() {
   // MOCK DATA FOR THE "GUEST EXPLORER" ILLUSION
   // ==========================================
   const username = "Guest Explorer";
+  const email = "explorer@omnilearn.app";
   const docCount = 14;
   const quizzesTaken = 28;
   const avgScore = 92;
@@ -67,7 +69,6 @@ export default function InteractiveLandingPage() {
   const getCleanTitle = (path: string) => path.split('_').slice(1).join('_').replace('.pdf', '');
   const getTopics = (flashcards: any) => flashcards.map((f: any) => f.front).join(' · ');
 
-  // Dynamic colors for the Progress Radar Chart lines
   const gridStroke = mounted && resolvedTheme === 'dark' ? '#1e293b' : '#f1f5f9';
   const tickFill = mounted && resolvedTheme === 'dark' ? '#94a3b8' : '#64748b';
 
@@ -96,7 +97,8 @@ export default function InteractiveLandingPage() {
   const ThemeToggleMock = () => (
     <button 
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} 
-      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+      className="p-2 rounded-xl text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+      aria-label="Toggle Dark Mode"
     >
       {mounted && resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
     </button>
@@ -107,17 +109,17 @@ export default function InteractiveLandingPage() {
   // ==========================================
 
   const renderHomeTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-5xl mx-auto px-6 pt-6 pb-24">
+    <div className="flex flex-col w-full fade-in duration-300">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-6 md:space-y-0">
         <div>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Welcome to OmniLearn,</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Welcome back,</p>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mt-1">
             {username} 👋
           </h1>
         </div>
         
         <div className="flex items-center space-x-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex items-center space-x-3 shadow-sm">
+          <div className="bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3 flex items-center space-x-3 shadow-sm">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-orange-100 dark:bg-orange-900/30 text-orange-500">
               <Flame size={20} className="fill-orange-500" />
             </div>
@@ -127,7 +129,7 @@ export default function InteractiveLandingPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-3 flex items-center space-x-4 shadow-sm">
+          <div className="bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-2xl p-3 flex items-center space-x-4 shadow-sm">
             <div className="relative flex items-center justify-center w-12 h-12">
               <svg className="absolute w-12 h-12 transform -rotate-90">
                 <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-slate-100 dark:text-slate-800" />
@@ -144,33 +146,33 @@ export default function InteractiveLandingPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm">
+        <div className="bg-white dark:bg-[#111627] rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
           <BookOpen className="text-violet-500 dark:text-violet-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{docCount}</span>
           <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Documents</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm">
+        <div className="bg-white dark:bg-[#111627] rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
           <BrainCircuit className="text-emerald-500 dark:text-emerald-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{quizzesTaken}</span>
           <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Quizzes</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm">
+        <div className="bg-white dark:bg-[#111627] rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
           <Target className="text-orange-500 dark:text-orange-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{avgScore}%</span>
           <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Avg Score</span>
         </div>
       </div>
 
-      <div onClick={() => setActiveTab('upload')} className="cursor-pointer bg-violet-600 dark:bg-violet-700 rounded-3xl p-8 md:p-10 text-white shadow-lg relative overflow-hidden mb-10 border border-violet-500 dark:border-violet-600 group">
-        <div className="absolute -right-10 -top-10 opacity-20 group-hover:scale-110 transition-transform duration-700">
-          <Sparkles size={200} />
+      <div onClick={() => setActiveTab('upload')} className="cursor-pointer bg-[#7c3aed] rounded-3xl p-8 md:p-10 text-white shadow-lg relative overflow-hidden mb-10 group transition-transform active:scale-[0.98]">
+        <div className="absolute right-0 top-0 opacity-20 group-hover:scale-110 transition-transform duration-700 pointer-events-none translate-x-1/4 -translate-y-1/4">
+          <svg width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><path d="m18.36 5.64-12.72 12.72"/><path d="m5.64 5.64 12.72 12.72"/></svg>
         </div>
         <div className="relative z-10">
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
             <Upload size={24} className="text-white" />
           </div>
           <h2 className="text-2xl md:text-3xl font-bold mb-3">Upload a PDF</h2>
-          <p className="text-sm md:text-base text-violet-100 mb-8 max-w-md leading-relaxed">
+          <p className="text-sm md:text-base text-violet-200 mb-8 max-w-md leading-relaxed">
             Drop your study material and get instant quizzes, summaries, and slide decks.
           </p>
           <div className="inline-flex items-center px-6 py-3.5 bg-white text-violet-700 font-extrabold rounded-xl shadow-sm">
@@ -182,14 +184,14 @@ export default function InteractiveLandingPage() {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4 px-2">
           <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Recent Activity</h3>
-          <button onClick={() => setActiveTab('library')} className="text-xs font-bold text-violet-600 dark:text-violet-400">View All</button>
+          <button onClick={() => setActiveTab('library')} className="text-xs font-bold text-violet-600 dark:text-violet-400 hover:text-violet-500">View All</button>
         </div>
         
         <div className="space-y-3">
           {recentNotes.map((note) => (
-            <div onClick={requireAuth} key={note.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:border-violet-200 dark:hover:border-violet-800 transition-colors cursor-pointer group">
+            <div onClick={requireAuth} key={note.id} className="flex items-center justify-between p-4 bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-3xl shadow-sm hover:border-violet-200 dark:hover:border-violet-800/50 transition-colors cursor-pointer group">
               <div className="flex items-center space-x-4 overflow-hidden">
-                <div className="w-10 h-10 bg-violet-50 dark:bg-violet-900/20 rounded-xl shrink-0 flex items-center justify-center text-violet-500 dark:text-violet-400 group-hover:bg-violet-100">
+                <div className="w-10 h-10 bg-violet-50 dark:bg-violet-900/20 rounded-xl shrink-0 flex items-center justify-center text-violet-500 dark:text-violet-400 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40">
                   <BookOpenText size={18} />
                 </div>
                 <div className="flex flex-col truncate pr-4">
@@ -210,14 +212,14 @@ export default function InteractiveLandingPage() {
   );
 
   const renderUploadTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto px-6 pt-6 pb-24">
+    <div className="flex flex-col w-full fade-in duration-300">
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Upload Material</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Transform any PDF into an interactive study session.</p>
       </div>
 
       {!guestFile ? (
-        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-10 py-24 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group relative cursor-pointer shadow-sm">
+        <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-white dark:bg-[#111627] flex flex-col items-center justify-center p-10 py-24 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 cursor-pointer shadow-sm group">
           <input 
             type="file" 
             accept=".pdf" 
@@ -233,7 +235,7 @@ export default function InteractiveLandingPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[32px] p-6 shadow-sm animate-in zoom-in-95 duration-300">
+        <div className="bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-[32px] p-6 shadow-sm">
           <div className="flex items-center space-x-4 mb-8">
             <div className="w-14 h-14 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0">
               <FileText size={24} />
@@ -248,13 +250,11 @@ export default function InteractiveLandingPage() {
               <X size={20} />
             </button>
           </div>
-
-          {/* THE TRAPDOOR IS HERE! */}
           <button 
             onClick={requireAuth} 
-            className="w-full py-5 bg-violet-600 dark:bg-violet-700 text-white font-bold rounded-2xl shadow-md hover:bg-violet-700 flex justify-center items-center group transition-colors"
+            className="w-full py-5 bg-violet-600 dark:bg-violet-700 text-white font-bold rounded-2xl shadow-md hover:bg-violet-700 flex justify-center items-center transition-colors"
           >
-            Generate Study Kit <Sparkles size={18} className="ml-2 group-hover:animate-pulse" />
+            Generate Study Kit <Sparkles size={18} className="ml-2" />
           </button>
         </div>
       )}
@@ -262,7 +262,7 @@ export default function InteractiveLandingPage() {
   );
 
   const renderLibraryTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto px-6 pt-6 pb-24">
+    <div className="flex flex-col w-full fade-in duration-300">
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Library</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">All your processed study materials</p>
@@ -270,7 +270,7 @@ export default function InteractiveLandingPage() {
 
       <div className="flex flex-col space-y-4">
         {recentNotes.map((note) => (
-          <div onClick={requireAuth} key={note.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800 transition-all cursor-pointer">
+          <div onClick={requireAuth} key={note.id} className="flex items-center justify-between p-4 bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-3xl shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800/50 transition-all cursor-pointer">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 transition-colors">
                 <FileText size={20} />
@@ -299,7 +299,7 @@ export default function InteractiveLandingPage() {
   );
 
   const renderProgressTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-3xl mx-auto px-6 pt-6 pb-24">
+    <div className="flex flex-col w-full fade-in duration-300">
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Progress</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Track your study journey</p>
@@ -314,24 +314,24 @@ export default function InteractiveLandingPage() {
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+        <div className="bg-white dark:bg-[#111627] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
           <TrendingUp size={16} className="text-slate-400 dark:text-slate-500 mb-2" />
           <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
           <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Average</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+        <div className="bg-white dark:bg-[#111627] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
           <Target size={16} className="text-slate-400 dark:text-slate-500 mb-2" />
           <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
           <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Best Score</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+        <div className="bg-white dark:bg-[#111627] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
           <Clock size={16} className="text-slate-400 dark:text-slate-500 mb-2" />
           <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0s</span>
           <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Study Time</span>
         </div>
       </div>
 
-      <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-5 mb-6 flex items-start space-x-3 transition-colors">
+      <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-5 mb-6 flex items-start space-x-3">
         <AlertCircle size={20} className="text-orange-500 dark:text-orange-400 shrink-0 mt-0.5" />
         <div>
           <h3 className="text-sm font-bold text-orange-800 dark:text-orange-400">No data available yet</h3>
@@ -341,7 +341,7 @@ export default function InteractiveLandingPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm mb-6 opacity-50 transition-colors">
+      <div className="bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm mb-6 opacity-50">
         <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50 mb-4">Subject Mastery</h3>
         <div className="h-[250px] w-full mt-4">
           <ResponsiveContainer width="100%" height="100%">
@@ -357,48 +357,48 @@ export default function InteractiveLandingPage() {
   );
 
   const renderProfileTab = () => (
-    <div className="flex flex-col w-full animate-in fade-in duration-500 max-w-2xl mx-auto px-6 pt-6 pb-24">
+    <div className="flex flex-col w-full fade-in duration-300">
       <div className="flex flex-col items-center justify-center pt-6 mb-8">
-        <div className="w-24 h-24 bg-violet-600 dark:bg-violet-700 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg mb-4 uppercase transition-colors">
-          G
+        <div className="w-24 h-24 bg-violet-600 dark:bg-violet-700 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg mb-4 uppercase">
+          {username.charAt(0)}
         </div>
         <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{username}</h2>
-        <p className="text-sm text-emerald-500 font-bold mt-1">Free Explorer Plan</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{email}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-8">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
-          <BookOpen size={16} className="text-violet-500 dark:text-violet-400 mb-2" />
-          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">{docCount}</span>
-          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Documents</span>
+        <div className="bg-white dark:bg-[#111627] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
+          <BookOpen className="text-violet-500 dark:text-violet-400 mb-2 md:w-8 md:h-8" size={20} />
+          <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{docCount}</span>
+          <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Documents</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
-          <BrainCircuit size={16} className="text-emerald-500 dark:text-emerald-400 mb-2" />
-          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0</span>
-          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Quizzes</span>
+        <div className="bg-white dark:bg-[#111627] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
+          <BrainCircuit className="text-emerald-500 dark:text-emerald-400 mb-2 md:w-8 md:h-8" size={20} />
+          <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{quizzesTaken}</span>
+          <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Quizzes</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
-          <Target size={16} className="text-orange-500 dark:text-orange-400 mb-2" />
-          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
-          <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Avg Score</span>
+        <div className="bg-white dark:bg-[#111627] rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center text-center shadow-sm">
+          <Target className="text-orange-500 dark:text-orange-400 mb-2 md:w-8 md:h-8" size={20} />
+          <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{avgScore}%</span>
+          <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Avg Score</span>
         </div>
       </div>
 
       <div className="mb-6">
         <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-3 px-2">Account</h3>
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm transition-colors">
+        <div className="bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-3xl overflow-hidden shadow-sm">
           <div onClick={requireAuth} className="flex items-center space-x-4 p-5 border-b border-slate-50 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
-            <Settings size={20} className="text-slate-400 dark:text-slate-500" />
+            <User size={20} className="text-slate-400 dark:text-slate-500" />
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Account Settings</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Manage your preferences</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Name</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{username}</span>
             </div>
           </div>
           <div onClick={requireAuth} className="flex items-center space-x-4 p-5 border-b border-slate-50 dark:border-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
-            <CreditCard size={20} className="text-slate-400 dark:text-slate-500" />
+            <Shield size={20} className="text-slate-400 dark:text-slate-500" />
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Upgrade Plan</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Unlock premium features</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Email</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{email}</span>
             </div>
           </div>
         </div>
@@ -406,12 +406,12 @@ export default function InteractiveLandingPage() {
 
       <div className="mb-8">
         <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase mb-3 px-2">Notifications</h3>
-        <div onClick={requireAuth} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+        <div onClick={requireAuth} className="bg-white dark:bg-[#111627] border border-slate-100 dark:border-slate-800/80 rounded-3xl overflow-hidden shadow-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
           <div className="flex items-center space-x-4 p-5">
             <Bell size={20} className="text-slate-500 dark:text-slate-400" />
             <div className="flex flex-col">
               <span className="text-sm font-bold text-slate-900 dark:text-slate-50">Daily Practice Reminders</span>
-              <span className="text-xs text-slate-500 dark:text-slate-400">Not set up yet</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Not set up yet — go to Progress tab</span>
             </div>
           </div>
         </div>
@@ -419,7 +419,7 @@ export default function InteractiveLandingPage() {
 
       <button 
         onClick={requireAuth}
-        className="flex items-center justify-center space-x-3 p-5 bg-violet-600 dark:bg-violet-700 rounded-3xl w-full shadow-md hover:bg-violet-700 dark:hover:bg-violet-600 transition-colors"
+        className="flex items-center justify-center space-x-3 p-5 bg-violet-600 dark:bg-violet-700 rounded-3xl w-full shadow-md hover:bg-violet-700 transition-colors"
       >
         <span className="text-sm font-bold text-white">Create Free Account</span>
       </button>
@@ -427,10 +427,10 @@ export default function InteractiveLandingPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 font-sans transition-colors duration-300">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#0a0f1c] font-sans transition-colors duration-300">
       
       {/* ================= DESKTOP TOP NAVIGATION ================= */}
-      <div className="hidden md:flex fixed top-0 w-full bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-8 py-4 z-50 justify-between items-center shadow-sm transition-colors duration-300">
+      <div className="hidden md:flex fixed top-0 w-full bg-white/90 dark:bg-[#0a0f1c]/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 px-8 py-4 z-50 justify-between items-center transition-colors duration-300">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
           <Image 
             src="/OmniLearn.jpg" 
@@ -467,7 +467,7 @@ export default function InteractiveLandingPage() {
             <ThemeToggleMock />
             <button 
               onClick={requireAuth} 
-              className="flex items-center px-5 py-2 bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-widest rounded-full shadow-md hover:scale-105 transition-transform"
+              className="flex items-center px-5 py-2.5 bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 text-xs font-black uppercase tracking-widest rounded-full shadow-md hover:scale-105 transition-transform"
             >
               Sign In <LogIn size={14} className="ml-2" />
             </button>
@@ -476,7 +476,7 @@ export default function InteractiveLandingPage() {
       </div>
 
       {/* ================= MOBILE TOP HEADER ================= */}
-      <div className="md:hidden fixed top-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-50 transition-colors duration-300">
+      <div className="md:hidden fixed top-0 w-full bg-white/90 dark:bg-[#0a0f1c]/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 px-6 py-4 flex justify-between items-center z-50 transition-colors duration-300">
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setActiveTab('home')}>
           <Image 
             src="/OmniLearn.jpg" 
@@ -484,19 +484,18 @@ export default function InteractiveLandingPage() {
             width={28} 
             height={28} 
             className="rounded-lg object-cover"
+            priority
           />
           <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-slate-50">OmniLearn</span>
         </div>
-        <div className="flex items-center space-x-3">
-          <ThemeToggleMock />
-        </div>
+        <ThemeToggleMock />
       </div>
 
-      {/* Spacer to prevent content hiding under fixed navs */}
-      <div className="h-20 w-full" />
+      {/* Accurate Desktop Spacing to match real application padding */}
+      <div className="h-16 md:h-24 w-full shrink-0" />
 
       {/* MAIN CONTENT AREA */}
-      <main className="w-full">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-6">
         {activeTab === 'home' && renderHomeTab()}
         {activeTab === 'upload' && renderUploadTab()}
         {activeTab === 'library' && renderLibraryTab()}
@@ -505,7 +504,7 @@ export default function InteractiveLandingPage() {
       </main>
 
       {/* ================= MOBILE BOTTOM NAVIGATION ================= */}
-      <div className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] dark:shadow-none transition-colors duration-300 pb-safe">
+      <div className="md:hidden fixed bottom-0 w-full bg-white dark:bg-[#0a0f1c] border-t border-slate-200 dark:border-slate-800/50 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] dark:shadow-none transition-colors duration-300 pb-safe">
         {navItems.map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
