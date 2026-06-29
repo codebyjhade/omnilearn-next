@@ -1,53 +1,59 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Upload, FileText, Sparkles, CheckCircle2, Circle, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useUpload } from "../../context/UploadContext";
+import { UploadCloud, FileText, AlertCircle, X } from "lucide-react";
 
 export default function UploadPage() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadStep, setUploadStep] = useState<'idle' | 'uploading' | 'analyzing' | 'done'>('idle');
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-
-  // 🔥 THE GUARD: Check login status on page load
-  useEffect(() => {
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/"); // Kick unauthenticated users out
-      }
-    }
-    checkAuth();
-  }, [router]); 
+  
+  // Connect to our new Global Upload Manager
+  const { startUpload, updateProgress, finishUpload, isUploading } = useUpload();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError(null);
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      if (selectedFile.type !== 'application/pdf') {
+        setError("Only PDF files are supported at this time.");
+        return;
+      }
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setError("File size must be under 10MB.");
+        return;
+      }
+      setFile(selectedFile);
     }
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
-    
+    if (!file) return;
+
     try {
-      // Step 1: Uploading to Supabase
-      setUploadStep('uploading');
+      setError(null);
+      
+      // 1. Trigger the Global Widget
+      startUpload();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Please log in first.");
+      if (!user) throw new Error("Authentication error");
 
-      const safeFileName = selectedFile.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-      const filePath = `${user.id}/${Date.now()}_${safeFileName}`;
-
+      // 2. Upload to Supabase Storage
+      updateProgress(20, "Encrypting & uploading to server...");
+      const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+      const filePath = `${user.id}/${Date.now()}_${cleanFileName}`;
+      
       const { error: uploadError } = await supabase.storage
         .from('study_materials')
-        .upload(filePath, selectedFile);
-
+        .upload(filePath, file);
+        
       if (uploadError) throw uploadError;
 
-      // Step 2: AI is Analyzing
-      setUploadStep('analyzing');
+      // 3. Trigger Gemini AI Backend
+      updateProgress(60, "AI is reading and extracting data...");
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,149 +62,88 @@ export default function UploadPage() {
 
       if (!response.ok) throw new Error('AI generation failed');
 
-      // Step 3: Done!
-      setUploadStep('done');
+      // 4. Success!
+      updateProgress(100, "Study Kit ready! Redirecting...");
       
-      // Give the user 1.5 seconds to see the "100% Complete" state, then redirect to the lesson view
       setTimeout(() => {
-        router.push('/library'); // We will build the exact lesson view next!
+        finishUpload();
+        setFile(null);
+        router.push('/library');
       }, 1500);
 
-    } catch (error: any) {
-      console.error('Upload error:', error);
-      alert(error.message || 'Failed to process file.');
-      setUploadStep('idle');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to process the document.");
+      finishUpload(); // Kill the global widget on error
     }
   };
 
-  // Helper to format file size
-  const formatSize = (bytes: number) => (bytes / (1024 * 1024)).toFixed(1);
-
   return (
-    <div className="flex flex-col w-full h-full min-h-screen bg-slate-50 px-6 pt-12 pb-24">
-      
+    <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 px-6 pt-12 pb-24 transition-colors duration-300">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Upload Material</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Drop a PDF and let AI create your study kit
-        </p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Upload</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Transform any PDF into an interactive study session.</p>
       </div>
 
-      {uploadStep === 'idle' ? (
-        <div className="animate-in fade-in duration-300 flex flex-col space-y-6">
-          
-          {/* Dashed Upload Area */}
-          <div className="relative flex flex-col items-center justify-center w-full py-12 border-2 border-dashed border-violet-200 rounded-3xl bg-white hover:bg-violet-50/50 transition-colors">
+      <div className="flex-1 flex flex-col">
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900/50 rounded-2xl flex items-start space-x-3 text-red-600 dark:text-red-400 animate-in fade-in transition-colors">
+            <AlertCircle size={18} className="shrink-0 mt-0.5" />
+            <span className="text-sm font-medium leading-relaxed">{error}</span>
+          </div>
+        )}
+
+        {!file ? (
+          <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-10 py-20 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group relative cursor-pointer">
             <input 
               type="file" 
-              accept=".pdf"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              accept=".pdf" 
               onChange={handleFileChange}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
             />
-            <div className="flex flex-col items-center justify-center pointer-events-none">
-              <div className="w-14 h-14 bg-violet-100 rounded-2xl flex items-center justify-center text-violet-600 mb-4 shadow-sm">
-                <Upload size={24} strokeWidth={2.5} />
-              </div>
-              {!selectedFile ? (
-                <>
-                  <p className="font-semibold text-slate-700">Select a file</p>
-                  <p className="text-xs text-slate-400 mt-1">PDF up to 10MB</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold text-slate-900 truncate max-w-[200px]">{selectedFile.name}</p>
-                  <p className="text-xs text-slate-400 mt-1">{formatSize(selectedFile.size)} MB</p>
-                </>
-              )}
+            <div className="w-20 h-20 bg-violet-50 dark:bg-violet-900/20 rounded-full flex items-center justify-center text-violet-500 dark:text-violet-400 mb-6 group-hover:scale-110 transition-transform duration-300">
+              <UploadCloud size={32} />
             </div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">Tap or Drag a PDF</h3>
+            <p className="text-sm text-slate-400 dark:text-slate-500 font-medium max-w-[200px] leading-relaxed">
+              Max file size 10MB. We'll handle the rest.
+            </p>
           </div>
-
-          {/* Selected File Card & Button */}
-          {selectedFile && (
-            <div className="flex flex-col space-y-4 animate-in slide-in-from-bottom-4 duration-300">
-              <div className="flex items-center space-x-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                <div className="text-violet-600">
-                  <FileText size={28} strokeWidth={2} />
-                </div>
-                <div className="flex-1 truncate">
-                  <p className="text-sm font-semibold text-slate-900 truncate">{selectedFile.name}</p>
-                  <p className="text-xs text-slate-500">{formatSize(selectedFile.size)} MB</p>
-                </div>
+        ) : (
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[32px] p-6 shadow-sm animate-in zoom-in-95 duration-300 transition-colors">
+            <div className="flex items-center space-x-4 mb-8">
+              <div className="w-14 h-14 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-600 dark:text-violet-400 shrink-0 transition-colors">
+                <FileText size={24} />
               </div>
-
-              <button 
-                onClick={handleUpload}
-                className="flex items-center justify-center w-full py-4 space-x-2 font-semibold text-white bg-violet-600 rounded-2xl shadow-md hover:bg-violet-700 transition-all active:scale-[0.98]"
-              >
-                <Sparkles size={20} />
-                <span>Generate Study Kit</span>
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Progress State UI */
-        <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm animate-in zoom-in-95 duration-300">
-          <div className="space-y-6">
-            
-            {/* Step 1: Uploading */}
-            <div className="flex items-center space-x-4">
-              {uploadStep === 'uploading' ? (
-                <Loader2 className="text-violet-600 animate-spin" size={24} />
-              ) : (
-                <CheckCircle2 className="text-emerald-500" size={24} />
-              )}
-              <span className={`text-sm font-medium ${uploadStep === 'uploading' ? 'text-slate-900' : 'text-slate-500'}`}>
-                Uploading PDF...
-              </span>
-            </div>
-
-            {/* Step 2: Analyzing */}
-            <div className="flex items-center space-x-4">
-              {uploadStep === 'uploading' ? (
-                <Circle className="text-slate-200" size={24} />
-              ) : uploadStep === 'analyzing' ? (
-                <Loader2 className="text-violet-600 animate-spin" size={24} />
-              ) : (
-                <CheckCircle2 className="text-emerald-500" size={24} />
-              )}
-              <span className={`text-sm font-medium ${uploadStep === 'analyzing' ? 'text-slate-900' : 'text-slate-400'}`}>
-                AI is analyzing your material...
-              </span>
-            </div>
-
-            {/* Step 3: Done */}
-            <div className="flex items-center space-x-4">
-              {uploadStep === 'done' ? (
-                <CheckCircle2 className="text-emerald-500" size={24} />
-              ) : (
-                <Circle className="text-slate-200" size={24} />
-              )}
-              <span className={`text-sm font-medium ${uploadStep === 'done' ? 'text-slate-900' : 'text-slate-400'}`}>
-                All study assets ready!
-              </span>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="pt-4 space-y-2">
-              <div className="w-full h-2.5 bg-violet-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-violet-600 rounded-full transition-all duration-500 ease-out"
-                  style={{ 
-                    width: uploadStep === 'uploading' ? '33%' : 
-                           uploadStep === 'analyzing' ? '66%' : '100%' 
-                  }}
-                />
+              <div className="flex flex-col flex-1 truncate">
+                <span className="font-bold text-slate-900 dark:text-slate-50 truncate">{file.name}</span>
+                <span className="text-xs font-medium text-slate-400 dark:text-slate-500 mt-0.5">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB • PDF Document
+                </span>
               </div>
-              <p className="text-xs text-center text-slate-500 font-medium">
-                {uploadStep === 'uploading' ? '33% complete' : 
-                 uploadStep === 'analyzing' ? '66% complete' : '100% complete'}
-              </p>
+              {!isUploading && (
+                <button onClick={() => setFile(null)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors">
+                  <X size={20} />
+                </button>
+              )}
             </div>
+
+            <button 
+              onClick={handleUpload} 
+              disabled={isUploading}
+              className="w-full py-5 bg-violet-600 dark:bg-violet-700 text-white font-bold rounded-2xl shadow-md hover:bg-violet-700 dark:hover:bg-violet-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
+            >
+              {isUploading ? "Processing in background..." : "Generate Study Kit"}
+            </button>
             
+            {isUploading && (
+               <p className="text-xs text-center text-slate-400 dark:text-slate-500 mt-4 font-medium">
+                 You can safely navigate away. We'll notify you when it's ready!
+               </p>
+            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

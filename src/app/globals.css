@@ -123,8 +123,26 @@
   }
   body {
     @apply bg-background text-foreground;
+    
+    /* Native App Mobile Locks */
+    overscroll-behavior-y: none; 
+    -webkit-tap-highlight-color: transparent; 
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans;
+    
+    /* Prevents rubber-banding on iOS */
+    overscroll-behavior-y: none;
   }
+}
+
+/* We use this class on your horizontal tabs and smart chips */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
