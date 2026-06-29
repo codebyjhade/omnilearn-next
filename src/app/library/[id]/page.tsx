@@ -54,7 +54,6 @@ export default function LessonView() {
 
   useEffect(() => {
     async function fetchLesson() {
-      if (!supabase) { setLoading(false); return; }
       const { data: note } = await supabase.from('study_notes').select('*').eq('id', id).single();
       if (note) setData(note);
       setLoading(false);
@@ -123,7 +122,6 @@ export default function LessonView() {
     const percentage = Math.round((calculatedScore / questions.length) * 100);
 
     try {
-      if (!supabase) { setExamState('results'); setIsSubmitting(false); return; }
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         // 1. Save the quiz score to history
