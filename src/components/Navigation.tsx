@@ -23,80 +23,118 @@ export default function Navigation() {
   return (
     <>
       {/* ================= DESKTOP TOP NAVIGATION ================= */}
-      <div className="hidden md:flex fixed top-0 w-full bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 px-8 py-4 z-50 justify-between items-center shadow-sm transition-colors duration-300">
-        <div className="flex items-center space-x-2">
-          {/* 🔥 Your Custom Logo */}
-          <Image 
-            src="/OmniLearn.jpg" 
-            alt="OmniLearn Logo" 
-            width={32} 
-            height={32} 
-            className="rounded-lg object-cover"
-            priority // 🔥 This fixes the warning!
-          />
-          <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-slate-50">OmniLearn</span>
-        </div>
-        
-        <div className="flex items-center space-x-8">
-          <div className="flex space-x-8">
+      <header className="hidden md:block fixed top-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 z-50 shadow-sm transition-colors duration-300">
+        <div className="w-full max-w-5xl mx-auto px-8 h-16 flex items-center justify-between gap-8">
+          {/* Logo */}
+          <Link href="/home" className="flex items-center gap-2 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded-lg">
+            <Image
+              src="/OmniLearn.jpg"
+              alt="OmniLearn Logo"
+              width={32}
+              height={32}
+              className="rounded-lg object-cover"
+              priority
+            />
+            <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-slate-50">
+              OmniLearn
+            </span>
+          </Link>
+
+          {/* Center nav links */}
+          <nav className="flex items-center gap-6" aria-label="Main navigation">
             {navItems.map((item) => {
-              const isActive = pathname === item.path || (pathname === '/' && item.path === '/home');
+              const isActive = pathname === item.path;
               const Icon = item.icon;
               return (
-                <Link href={item.path} key={item.name} className="flex items-center space-x-2 group">
-                  <Icon size={18} className={`transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-violet-400 dark:group-hover:text-violet-300'}`} />
-                  <span className={`text-sm font-bold transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-violet-500 dark:group-hover:text-violet-300'}`}>
+                <Link
+                  href={item.path}
+                  key={item.name}
+                  aria-current={isActive ? "page" : undefined}
+                  className="flex items-center gap-1.5 group focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 rounded"
+                >
+                  <Icon
+                    size={18}
+                    aria-hidden="true"
+                    className={`transition-colors duration-200 ${
+                      isActive
+                        ? "text-violet-600 dark:text-violet-400"
+                        : "text-slate-400 dark:text-slate-500 group-hover:text-violet-400 dark:group-hover:text-violet-300"
+                    }`}
+                  />
+                  <span
+                    className={`text-sm font-bold transition-colors duration-200 ${
+                      isActive
+                        ? "text-violet-600 dark:text-violet-400"
+                        : "text-slate-500 dark:text-slate-400 group-hover:text-violet-500 dark:group-hover:text-violet-300"
+                    }`}
+                  >
                     {item.name}
                   </span>
                 </Link>
               );
             })}
-          </div>
-          
-          {/* Divider and Theme Toggle */}
-          <div className="pl-6 border-l border-slate-200 dark:border-slate-800 flex items-center">
+          </nav>
+
+          {/* Right-side controls */}
+          <div className="flex items-center gap-3 shrink-0">
             <ThemeToggle />
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* ================= MOBILE TOP HEADER (For Logo & Theme Toggle) ================= */}
-      <div className="md:hidden fixed top-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-between items-center z-50 transition-colors duration-300">
-        <div className="flex items-center space-x-2">
-          <Image 
-            src="/OmniLearn.jpg" 
-            alt="OmniLearn Logo" 
-            width={28} 
-            height={28} 
-            className="rounded-lg object-cover"
-          />
-          <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-slate-50">OmniLearn</span>
+      {/* ================= MOBILE TOP HEADER ================= */}
+      <header className="md:hidden fixed top-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800 z-50 transition-colors duration-300">
+        <div className="px-6 h-16 flex items-center justify-between">
+          <Link href="/home" className="flex items-center gap-2 focus:outline-none">
+            <Image
+              src="/OmniLearn.jpg"
+              alt="OmniLearn Logo"
+              width={28}
+              height={28}
+              className="rounded-lg object-cover"
+            />
+            <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-slate-50">
+              OmniLearn
+            </span>
+          </Link>
+          <ThemeToggle />
         </div>
-        <ThemeToggle />
-      </div>
+      </header>
 
-      {/* Invisible spacer to prevent mobile content from hiding under the new top header */}
-      <div className="md:hidden h-16 w-full" />
+      {/* Spacer — prevents content from hiding under the fixed header */}
+      <div className="md:hidden h-16 w-full" aria-hidden="true" />
 
       {/* ================= MOBILE BOTTOM NAVIGATION ================= */}
-      <div className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.02)] dark:shadow-none transition-colors duration-300">
+      <nav
+        className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 flex justify-between items-center z-50 transition-colors duration-300"
+        aria-label="Bottom navigation"
+        style={{ paddingTop: "0.75rem", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
         {navItems.map((item) => {
-          const isActive = pathname === item.path || (pathname === '/' && item.path === '/home');
+          const isActive = pathname === item.path;
           const Icon = item.icon;
           return (
-            <Link href={item.path} key={item.name} className="flex flex-col items-center gap-1 relative w-12">
-              {/* Active Indicator Dot */}
+            <Link
+              href={item.path}
+              key={item.name}
+              aria-current={isActive ? "page" : undefined}
+              className="relative flex flex-col items-center gap-1 w-12 focus:outline-none"
+            >
               {isActive && (
-                <span className="absolute -top-3 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full" />
+                <span className="absolute -top-3 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full" aria-hidden="true" />
               )}
-              <Icon size={22} className={`transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`} />
-              <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? 'text-violet-600 dark:text-violet-400' : 'text-slate-400 dark:text-slate-500'}`}>
+              <Icon
+                size={22}
+                aria-hidden="true"
+                className={`transition-colors duration-200 ${isActive ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}
+              />
+              <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}>
                 {item.name}
               </span>
             </Link>
           );
         })}
-      </div>
+      </nav>
     </>
   );
 }
