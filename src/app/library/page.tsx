@@ -67,9 +67,10 @@ export default function LibraryPage() {
   };
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 px-6 pt-12 pb-24 transition-colors duration-300">
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 md:pt-20 pb-24 md:pb-8">
+    <div className="flex flex-col w-full">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Library</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Library</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">All your processed study materials</p>
       </div>
 
@@ -97,12 +98,12 @@ export default function LibraryPage() {
           {notes.map((note) => (
             <Link href={`/library/${note.id}`} key={note.id}>
               <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800 transition-all cursor-pointer">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 transition-colors">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 transition-colors shrink-0">
                     <FileText size={20} />
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate max-w-[180px]">
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate" title={getCleanTitle(note.file_path)}>
                       {getCleanTitle(note.file_path)}
                     </span>
                     <div className="flex items-center mt-1">
@@ -124,5 +125,6 @@ export default function LibraryPage() {
         </div>
       )}
     </div>
+    </main>
   );
 }

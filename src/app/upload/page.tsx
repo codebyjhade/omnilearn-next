@@ -99,8 +99,9 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 px-6 pt-12 pb-24 transition-colors duration-300">
-      <div className="mb-8">
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 md:pt-20 pb-24 md:pb-8">
+    <div className="flex flex-col w-full">
+      <div className="mb-6 md:mb-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Upload</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Transform any PDF into an interactive study session.</p>
       </div>
@@ -165,5 +166,6 @@ export default function UploadPage() {
         )}
       </div>
     </div>
+    </main>
   );
 }

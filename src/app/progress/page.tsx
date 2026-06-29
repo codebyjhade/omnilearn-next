@@ -27,9 +27,10 @@ export default function ProgressPage() {
   const tickFill = mounted && resolvedTheme === 'dark' ? '#94a3b8' : '#64748b';
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 px-6 pt-12 pb-24 animate-in fade-in duration-300 transition-colors">
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 md:pt-20 pb-24 md:pb-8">
+    <div className="flex flex-col w-full">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Progress</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">Progress</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Track your study journey</p>
       </div>
 
@@ -82,5 +83,6 @@ export default function ProgressPage() {
         </div>
       </div>
     </div>
+    </main>
   );
 }

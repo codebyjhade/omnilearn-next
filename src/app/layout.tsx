@@ -17,11 +17,9 @@ import type { Viewport } from 'next';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' }, // slate-50
-    { media: '(prefers-color-scheme: dark)', color: '#020617' }   // slate-950
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#020617' },
   ],
 };  
 
@@ -38,18 +36,13 @@ export default function RootLayout({
           <UploadProvider>
             
             <Navigation />
-            
+
             {/*
-              The landing page (/) renders its own full-screen shell including
-              its own nav and main container, so we must NOT add extra padding
-              on that route. For all other routes the Navigation adds a 64px
-              spacer on mobile via the .md:hidden h-16 div; on desktop the
-              fixed header is 64px (h-16) so pt-20 (5rem ≈ 80px) gives a
-              comfortable 16px breathing room below the bar.
+              Each page is responsible for its own padding and max-width.
+              The landing page (/) manages its own full-screen shell.
+              Authenticated pages each declare their own page container.
             */}
-            <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-20 pb-24 md:pb-12">
-              {children}
-            </main>
+            {children}
             
           </UploadProvider>
         </ThemeProvider>
