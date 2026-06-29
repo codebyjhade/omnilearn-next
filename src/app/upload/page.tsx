@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
@@ -18,6 +18,7 @@ export default function UploadPage() {
   useEffect(() => {
     // Check if they are a real user or a guest when they enter the upload room
     const checkUser = async () => {
+      if (!supabase) { setIsGuest(true); return; }
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setIsGuest(true);
@@ -53,6 +54,7 @@ export default function UploadPage() {
 
     try {
       setError(null);
+      if (!supabase) throw new Error("Supabase is not configured.");
       
       // 1. Trigger the Global Widget
       startUpload();

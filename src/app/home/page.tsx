@@ -21,6 +21,7 @@ export default function HomePage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!supabase) { router.push("/"); return; }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/");

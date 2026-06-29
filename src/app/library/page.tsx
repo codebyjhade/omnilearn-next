@@ -16,6 +16,7 @@ export default function LibraryPage() {
 
   const fetchNotes = async () => {
     try {
+      if (!supabase) { setLoading(false); return; }
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user) {
@@ -46,6 +47,7 @@ export default function LibraryPage() {
     e.stopPropagation(); // Prevents the click from bubbling up
     
     // 1. Delete from Supabase Database
+    if (!supabase) return;
     const { error } = await supabase.from('study_notes').delete().eq('id', id);
     
     if (error) {

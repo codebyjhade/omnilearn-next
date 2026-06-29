@@ -16,9 +16,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadRealUserData() {
+      if (!supabase) { router.push("/"); return; }
       const { data: { user } } = await supabase.auth.getUser();
       
-      // 🔥 THE GUARD: If no user is logged in, kick them to the login page
+      // THE GUARD: If no user is logged in, kick them to the login page
       if (!user) {
         router.push("/");
         return;
@@ -40,6 +41,7 @@ export default function ProfilePage() {
   }, [router]);
 
   const handleSignOut = async () => {
+    if (!supabase) { router.push("/"); return; }
     await supabase.auth.signOut();
     router.push("/"); 
   };

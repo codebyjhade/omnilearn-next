@@ -113,8 +113,9 @@ export default function LandingPage() {
     setMounted(true);
   }, []);
 
-  // Redirect already-authenticated users
+  // Redirect already-authenticated users (only when Supabase is configured)
   useEffect(() => {
+    if (!supabase) return;
     let cancelled = false;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!cancelled && session) router.replace("/home");

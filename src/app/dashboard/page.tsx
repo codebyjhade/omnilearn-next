@@ -10,7 +10,8 @@ export default function Home() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      if (!supabase) return;
+    const { data: { session } } = await supabase.auth.getSession();
       
       if (session && session.user && session.user.email) {
         // Logged in user gets their real name
