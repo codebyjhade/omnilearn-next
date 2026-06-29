@@ -2,15 +2,18 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-// Initialize Supabase to download the PDF and save the results
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Initialize Supabase lazily so the module evaluates without env vars at build time
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Missing Supabase server configuration.");
+  return createClient(url, key);
+}
 
 export async function POST(req: Request) {
   try {
     const { filePath } = await req.json();
+    const supabase = getSupabase();
     
     // 1. Download the uploaded PDF from your Supabase Storage bucket
     const { data: fileData, error: downloadError } = await supabase

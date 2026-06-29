@@ -17,11 +17,9 @@ import type { Viewport } from 'next';
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' }, // slate-50
-    { media: '(prefers-color-scheme: dark)', color: '#020617' }   // slate-950
+    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
+    { media: '(prefers-color-scheme: dark)', color: '#020617' },
   ],
 };  
 
@@ -31,17 +29,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="bg-slate-50 dark:bg-slate-950">
       <body className={`${inter.className} bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50 min-h-screen transition-colors duration-300`}>
         
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <UploadProvider>
             
             <Navigation />
-            
-            <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 md:pt-28 pb-24 md:pb-12">
-              {children}
-            </main>
+
+            {/*
+              Each page is responsible for its own padding and max-width.
+              The landing page (/) manages its own full-screen shell.
+              Authenticated pages each declare their own page container.
+            */}
+            {children}
             
           </UploadProvider>
         </ThemeProvider>

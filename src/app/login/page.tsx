@@ -21,8 +21,9 @@ export default function LoginPage() {
 
   // BOUNCER: If they are somehow already logged in, push them back to the app
   useEffect(() => {
+    if (!supabase) return;
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase!.auth.getSession();
       if (session) {
         router.push('/');
       }
@@ -34,6 +35,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
+    if (!supabase) {
+      setError("Supabase is not configured. Please add your environment variables.");
+      setLoading(false);
+      return;
+    }
 
     try {
       if (isSignUp) {

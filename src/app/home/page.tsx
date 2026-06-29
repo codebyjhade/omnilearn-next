@@ -21,6 +21,7 @@ export default function HomePage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!supabase) { router.push("/"); return; }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/");
@@ -73,10 +74,11 @@ export default function HomePage() {
   const svgDashoffset = 175 - (175 * xpProgress) / 100;
 
   return (
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 md:pt-20 pb-24 md:pb-8">
     <div className="flex flex-col w-full">
       
       {/* Gamified Welcome Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-6 md:space-y-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 md:mb-8 gap-4 md:gap-0">
         <div>
           <p className="text-slate-500 dark:text-slate-400 font-medium">Welcome back,</p>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mt-1">
@@ -117,7 +119,7 @@ export default function HomePage() {
       </div>
 
       {/* Classic Stats Row */}
-      <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
+      <div className="grid grid-cols-3 gap-2 md:gap-6 mb-5 md:mb-8">
         <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
           <BookOpen className="text-violet-500 dark:text-violet-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{docCount}</span>
@@ -136,20 +138,21 @@ export default function HomePage() {
       </div>
 
       {/* Upload Call to Action */}
-      <div className="bg-violet-600 dark:bg-violet-700 rounded-3xl p-8 md:p-10 text-white shadow-lg relative overflow-hidden mb-10 border border-violet-500 dark:border-violet-600">
-        <div className="absolute -right-10 -top-10 opacity-20">
+      <div className="bg-violet-600 dark:bg-violet-700 rounded-3xl p-5 md:p-8 text-white shadow-lg relative overflow-hidden mb-6 md:mb-8 border border-violet-500 dark:border-violet-600">
+        <div className="absolute -right-10 -top-10 opacity-20 pointer-events-none" aria-hidden="true">
           <Sparkles size={200} />
         </div>
         <div className="relative z-10">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
-            <Upload size={24} className="text-white" />
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 md:mb-5 backdrop-blur-sm">
+            <Upload size={20} className="text-white md:hidden" aria-hidden="true" />
+            <Upload size={24} className="text-white hidden md:block" aria-hidden="true" />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Upload a PDF</h2>
-          <p className="text-sm md:text-base text-violet-100 mb-8 max-w-md leading-relaxed">
+          <h2 className="text-xl md:text-3xl font-extrabold mb-2 md:mb-3">Upload a PDF</h2>
+          <p className="text-sm text-violet-100 mb-4 md:mb-6 max-w-md leading-relaxed">
             Drop your study material and get instant quizzes, summaries, and slide decks.
           </p>
-          <Link href="/upload" className="inline-flex items-center px-6 py-3.5 bg-white text-violet-700 font-extrabold rounded-xl hover:bg-violet-50 transition-transform hover:scale-105 active:scale-95 shadow-sm">
-            Get Started <ArrowRight size={18} className="ml-2" />
+          <Link href="/upload" className="inline-flex items-center px-5 py-2.5 md:px-6 md:py-3.5 bg-white text-violet-700 font-extrabold rounded-xl hover:bg-violet-50 transition-transform hover:scale-[1.02] active:scale-[0.97] shadow-sm text-sm md:text-base">
+            Get Started <ArrowRight size={16} className="ml-2" aria-hidden="true" />
           </Link>
         </div>
       </div>
@@ -195,12 +198,12 @@ export default function HomePage() {
             {recentNotes.map((note) => (
               <Link href={`/library/${note.id}`} key={note.id}>
                 <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:border-violet-200 dark:hover:border-violet-800 transition-colors cursor-pointer">
-                  <div className="flex items-center space-x-4 overflow-hidden">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="w-10 h-10 bg-violet-50 dark:bg-violet-900/20 rounded-xl shrink-0 flex items-center justify-center text-violet-500 dark:text-violet-400">
                       <BookOpenText size={18} />
                     </div>
-                    <div className="flex flex-col truncate pr-4">
-                      <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate">{getCleanTitle(note.file_path)}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate" title={getCleanTitle(note.file_path)}>{getCleanTitle(note.file_path)}</span>
                       <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
                         {getTopics(note.flashcards)}
                       </span>
@@ -217,5 +220,6 @@ export default function HomePage() {
       </div>
 
     </div>
+    </main>
   );
 }

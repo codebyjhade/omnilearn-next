@@ -16,9 +16,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadRealUserData() {
+      if (!supabase) { router.push("/"); return; }
       const { data: { user } } = await supabase.auth.getUser();
       
-      // 🔥 THE GUARD: If no user is logged in, kick them to the login page
+      // THE GUARD: If no user is logged in, kick them to the login page
       if (!user) {
         router.push("/");
         return;
@@ -40,6 +41,7 @@ export default function ProfilePage() {
   }, [router]);
 
   const handleSignOut = async () => {
+    if (!supabase) { router.push("/"); return; }
     await supabase.auth.signOut();
     router.push("/"); 
   };
@@ -47,14 +49,15 @@ export default function ProfilePage() {
   // Show a clean spinner while verifying the login session
   if (isAuthLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <div className="flex items-center justify-center py-32">
         <div className="animate-spin w-8 h-8 border-4 border-violet-600 dark:border-violet-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 px-6 pt-12 pb-24 animate-in fade-in duration-300 transition-colors duration-300">
+    <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 md:pt-20 pb-24 md:pb-8">
+    <div className="flex flex-col w-full animate-in fade-in duration-300">
       
       <div className="flex flex-col items-center justify-center pt-6 mb-8">
         <div className="w-24 h-24 bg-violet-600 dark:bg-violet-700 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg mb-4 uppercase transition-colors">
@@ -125,5 +128,6 @@ export default function ProfilePage() {
       </button>
 
     </div>
+    </main>
   );
 }
