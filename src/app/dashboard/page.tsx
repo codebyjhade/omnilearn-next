@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabaseClient";
 import { UploadCloud, Sparkles, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
   const [username, setUsername] = useState<string>("Loading...");
-  const [isGuest, setIsGuest] = useState<boolean>(false);
-  const router = useRouter();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -19,23 +16,13 @@ export default function Home() {
         // Logged in user gets their real name
         const name = session.user.email.split('@')[0];
         setUsername(name);
-        setIsGuest(false);
       } else {
         // THE ILLUSION: We give the guest a default name so the UI looks active
         setUsername("Student");
-        setIsGuest(true);
       }
     };
     fetchUser();
   }, []);
-
-  // THE TRAPDOOR: Invisible to the user until they actually try to click
-  const handleGatedAction = (e: React.MouseEvent) => {
-    if (isGuest) {
-      e.preventDefault(); // Stop the link from actually going to /upload
-      router.push('/login');   // Kick them to the login page!
-    }
-  };
 
   return (
     <div className="flex flex-col w-full px-6 pt-12 pb-24 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
@@ -66,8 +53,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Primary Upload CTA - Beautiful Purple Theme restored with the Trapdoor attached */}
-      <Link href="/upload" onClick={handleGatedAction} className="block group">
+      {/* Primary Upload CTA - NO TRAPDOOR HERE! Let them walk right into the Upload room. */}
+      <Link href="/upload" className="block group">
         <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 to-purple-800 rounded-3xl p-6 text-white shadow-xl transition-all duration-300 active:scale-[0.98]">
           
           <div className="absolute top-0 right-0 p-4 opacity-20">

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useUpload } from "../../context/UploadContext";
@@ -9,10 +9,22 @@ import { UploadCloud, FileText, AlertCircle, X } from "lucide-react";
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const router = useRouter();
   
   // Connect to our new Global Upload Manager
   const { startUpload, updateProgress, finishUpload, isUploading } = useUpload();
+
+  useEffect(() => {
+    // Check if they are a real user or a guest when they enter the upload room
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setIsGuest(true);
+      }
+    };
+    checkUser();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -32,6 +44,12 @@ export default function UploadPage() {
 
   const handleUpload = async () => {
     if (!file) return;
+
+    // THE TRAPDOOR: If they are a guest, stop the AI and send them to log in!
+    if (isGuest) {
+      router.push('/login');
+      return; // Stops the rest of the function from running
+    }
 
     try {
       setError(null);
