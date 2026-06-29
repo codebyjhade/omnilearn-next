@@ -239,14 +239,24 @@ export default function EntryPage() {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
+          {/* LOGIN TOGGLE & GUEST EXPLORER BUTTON */}
+          <div className="mt-8 text-center flex flex-col items-center space-y-6">
             <button
               onClick={() => { setIsLogin(!isLogin); setError(null); }}
               className="text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             >
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
             </button>
+
+            <button 
+              type="button"
+              onClick={() => router.push('/home')}
+              className="text-[11px] font-black text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 uppercase tracking-widest transition-colors flex items-center justify-center w-full"
+            >
+              Explore App as Guest <ArrowRight size={12} className="ml-1.5" />
+            </button>
           </div>
+
         </div>
       </div>
     </div>
