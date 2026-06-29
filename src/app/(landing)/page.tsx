@@ -146,12 +146,12 @@ export default function LandingPage() {
   const HomeTab = () => (
     <div className="flex flex-col w-full animate-in fade-in duration-300">
       {/* Welcome header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 md:mb-8 gap-4 md:gap-6">
         <div>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
+          <p className="text-slate-500 dark:text-slate-400 font-medium text-sm md:text-base">
             Welcome back,
           </p>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mt-1">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mt-0.5">
             {MOCK.username} 👋
           </h1>
         </div>
@@ -208,7 +208,7 @@ export default function LandingPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-3 md:gap-6 mb-8">
+      <div className="grid grid-cols-3 gap-2 md:gap-6 mb-5 md:mb-8">
         {[
           { icon: BookOpen, color: "text-violet-500 dark:text-violet-400", value: MOCK.docCount, label: "Documents" },
           { icon: BrainCircuit, color: "text-emerald-500 dark:text-emerald-400", value: MOCK.quizzesTaken, label: "Quizzes" },
@@ -235,7 +235,7 @@ export default function LandingPage() {
         tabIndex={0}
         onClick={() => setActiveTab("upload")}
         onKeyDown={(e) => e.key === "Enter" && setActiveTab("upload")}
-        className="cursor-pointer bg-violet-600 dark:bg-violet-700 rounded-3xl p-8 md:p-10 text-white shadow-lg relative overflow-hidden mb-10 group active:scale-[0.98] transition-transform border border-violet-500 dark:border-violet-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="cursor-pointer bg-violet-600 dark:bg-violet-700 rounded-3xl p-5 md:p-10 text-white shadow-lg relative overflow-hidden mb-6 md:mb-10 group active:scale-[0.98] transition-transform border border-violet-500 dark:border-violet-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
       >
         <div className="absolute right-0 top-0 opacity-20 group-hover:scale-110 transition-transform duration-700 pointer-events-none translate-x-1/4 -translate-y-1/4">
           <svg width="300" height="300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -244,22 +244,23 @@ export default function LandingPage() {
           </svg>
         </div>
         <div className="relative z-10">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-6 backdrop-blur-sm">
-            <Upload size={24} className="text-white" aria-hidden="true" />
+          <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4 md:mb-6 backdrop-blur-sm">
+            <Upload size={20} className="text-white md:hidden" aria-hidden="true" />
+            <Upload size={24} className="text-white hidden md:block" aria-hidden="true" />
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Upload a PDF</h2>
-          <p className="text-sm md:text-base text-violet-200 mb-8 max-w-md leading-relaxed">
+          <h2 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">Upload a PDF</h2>
+          <p className="text-sm md:text-base text-violet-200 mb-5 md:mb-8 max-w-md leading-relaxed">
             Drop your study material and get instant quizzes, summaries, and slide decks.
           </p>
-          <div className="inline-flex items-center px-6 py-3.5 bg-white text-violet-700 font-extrabold rounded-xl shadow-sm">
+          <div className="inline-flex items-center px-5 py-3 md:px-6 md:py-3.5 bg-white text-violet-700 font-extrabold rounded-xl shadow-sm text-sm md:text-base">
             Get Started <ArrowRight size={18} className="ml-2" aria-hidden="true" />
           </div>
         </div>
       </div>
 
       {/* Recent activity */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4 px-1">
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-3 px-1">
           <h3 className="text-xs font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
             Recent Activity
           </h3>
@@ -281,12 +282,12 @@ export default function LandingPage() {
               onKeyDown={(e) => e.key === "Enter" && requireAuth()}
               className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:border-violet-200 dark:hover:border-violet-800/50 transition-colors cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
             >
-              <div className="flex items-center gap-4 overflow-hidden">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div className="w-10 h-10 bg-violet-50 dark:bg-violet-900/20 rounded-xl shrink-0 flex items-center justify-center text-violet-500 dark:text-violet-400 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40 transition-colors">
                   <BookOpenText size={18} aria-hidden="true" />
                 </div>
-                <div className="flex flex-col truncate pr-4">
-                  <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate">
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate" title={getCleanTitle(note.file_path)}>
                     {getCleanTitle(note.file_path)}
                   </span>
                   <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 truncate mt-0.5">
@@ -389,12 +390,12 @@ export default function LandingPage() {
             onKeyDown={(e) => e.key === "Enter" && requireAuth()}
             className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800/50 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 shrink-0 transition-colors">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center text-violet-500 dark:text-violet-400 shrink-0 transition-colors">
                 <FileText size={20} aria-hidden="true" />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate max-w-[200px]">
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-slate-900 dark:text-slate-50 text-sm truncate" title={getCleanTitle(note.file_path)}>
                   {getCleanTitle(note.file_path)}
                 </span>
                 <div className="flex items-center mt-1">
@@ -701,8 +702,10 @@ export default function LandingPage() {
       </header>
 
       {/* ── MOBILE TOP HEADER ───────────────────────────────────────────────── */}
+      {/* Sign In is intentionally omitted here — the bottom nav Profile tab
+          surfaces the Sign In / Create Account CTA, keeping the header clean. */}
       <header className="md:hidden fixed top-0 w-full bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-100 dark:border-slate-800/50 z-50 transition-colors duration-300">
-        <div className="px-6 h-16 flex items-center justify-between">
+        <div className="px-5 h-14 flex items-center justify-between">
           <button
             onClick={() => setActiveTab("home")}
             className="flex items-center gap-2 focus:outline-none"
@@ -720,31 +723,23 @@ export default function LandingPage() {
               OmniLearn
             </span>
           </button>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button
-              onClick={requireAuth}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-950 text-xs font-bold rounded-lg focus:outline-none active:scale-[0.97] transition-transform"
-            >
-              Sign In <LogIn size={12} aria-hidden="true" />
-            </button>
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 
-      {/* Spacer that exactly matches the fixed header height — prevents CLS */}
-      <div className="h-16 w-full shrink-0" aria-hidden="true" />
+      {/* Spacer — matches mobile header h-14, desktop header h-16 */}
+      <div className="h-14 md:h-16 w-full shrink-0" aria-hidden="true" />
 
       {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-28 md:pb-12">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 pt-4 md:pt-6 pb-24 md:pb-12">
         {TABS[activeTab]}
       </main>
 
       {/* ── MOBILE BOTTOM NAV ───────────────────────────────────────────────── */}
       <nav
-        className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 px-6 py-3 flex justify-between items-center z-50 transition-colors duration-300"
+        className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800/50 flex justify-around items-center z-50 transition-colors duration-300 px-2"
         aria-label="Bottom navigation"
-        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        style={{ paddingTop: "0.5rem", paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         {NAV_ITEMS.map(({ name, id, icon: Icon }) => {
           const isActive = activeTab === id;
@@ -753,23 +748,25 @@ export default function LandingPage() {
               key={id}
               onClick={() => setActiveTab(id)}
               aria-current={isActive ? "page" : undefined}
-              className="relative flex flex-col items-center gap-1 w-12 focus:outline-none"
+              className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[52px] focus:outline-none"
             >
-              {isActive && (
-                <span
-                  className="absolute -top-3 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full"
+              <div className="relative flex items-center justify-center">
+                <Icon
+                  size={22}
                   aria-hidden="true"
+                  className={`transition-colors duration-200 ${
+                    isActive
+                      ? "text-violet-600 dark:text-violet-400"
+                      : "text-slate-400 dark:text-slate-500"
+                  }`}
                 />
-              )}
-              <Icon
-                size={22}
-                aria-hidden="true"
-                className={`transition-colors duration-200 ${
-                  isActive
-                    ? "text-violet-600 dark:text-violet-400"
-                    : "text-slate-400 dark:text-slate-500"
-                }`}
-              />
+                {isActive && (
+                  <span
+                    className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
               <span
                 className={`text-[10px] font-bold transition-colors duration-200 ${
                   isActive

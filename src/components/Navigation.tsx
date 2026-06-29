@@ -106,9 +106,9 @@ export default function Navigation() {
 
       {/* ================= MOBILE BOTTOM NAVIGATION ================= */}
       <nav
-        className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 px-6 flex justify-between items-center z-50 transition-colors duration-300"
+        className="md:hidden fixed bottom-0 w-full bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex justify-around items-center z-50 transition-colors duration-300 px-2"
         aria-label="Bottom navigation"
-        style={{ paddingTop: "0.75rem", paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        style={{ paddingTop: "0.5rem", paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         {navItems.map((item) => {
           const isActive = pathname === item.path;
@@ -118,16 +118,18 @@ export default function Navigation() {
               href={item.path}
               key={item.name}
               aria-current={isActive ? "page" : undefined}
-              className="relative flex flex-col items-center gap-1 w-12 focus:outline-none"
+              className="flex flex-col items-center gap-0.5 px-3 py-1 min-w-[52px] focus:outline-none"
             >
-              {isActive && (
-                <span className="absolute -top-3 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full" aria-hidden="true" />
-              )}
-              <Icon
-                size={22}
-                aria-hidden="true"
-                className={`transition-colors duration-200 ${isActive ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}
-              />
+              <div className="relative flex items-center justify-center">
+                <Icon
+                  size={22}
+                  aria-hidden="true"
+                  className={`transition-colors duration-200 ${isActive ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}
+                />
+                {isActive && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-violet-600 dark:bg-violet-400 rounded-full" aria-hidden="true" />
+                )}
+              </div>
               <span className={`text-[10px] font-bold transition-colors duration-200 ${isActive ? "text-violet-600 dark:text-violet-400" : "text-slate-400 dark:text-slate-500"}`}>
                 {item.name}
               </span>
