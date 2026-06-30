@@ -17,6 +17,14 @@ export default function LoginPage() {
   // Force dark mode for a premium login experience
   useEffect(() => {
     document.documentElement.classList.add('dark');
+    return () => {
+      const savedTheme = localStorage.getItem('theme') || 'system';
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isActuallyDark = savedTheme === 'dark' || (savedTheme === 'system' && systemPrefersDark);
+      if (!isActuallyDark) {
+        document.documentElement.classList.remove('dark');
+      }
+    };
   }, []);
 
   // BOUNCER: If they are somehow already logged in, push them back to the app
@@ -55,7 +63,7 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         // Redirect straight to the main app dashboard!
-        router.push("/");
+        router.push("/home");
       }
     } catch (err: any) {
       const message = err?.message || 'Unable to authenticate. Please check your Supabase configuration.';

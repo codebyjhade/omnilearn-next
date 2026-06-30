@@ -5,6 +5,8 @@ import { supabase } from "../../lib/supabaseClient";
 import Link from "next/link";
 import { Sparkles, ArrowRight, BookOpen, BrainCircuit, Target, Upload, BarChart2, BookOpenText, Flame, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuthGuard } from "../../hooks/useAuthGuard";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
   const [username, setUsername] = useState("");
@@ -16,25 +18,28 @@ export default function HomePage() {
   // Gamification State
   const [xp, setXp] = useState(0);
   const [streak, setStreak] = useState(0);
+
+  // Modal State
+  const [activeModal, setActiveModal] = useState<'docs' | 'quizzes' | 'scores' | null>(null);
+  const [statsHistory, setStatsHistory] = useState<{
+    docs: any[];
+    quizzes: any[];
+  }>({ docs: [], quizzes: [] });
   
   const router = useRouter();
+  const { user } = useAuthGuard();
 
   useEffect(() => {
+    if (!user || !supabase) return;
+    const currentUser = user;
     async function loadData() {
-      if (!supabase) { router.push("/"); return; }
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/");
-        return;
-      }
-
-      setUsername(user.email?.split('@')[0] || "Student");
+      setUsername(currentUser.email?.split('@')[0] || "Student");
 
       // Fetch standard stats
-      const { count } = await supabase.from('study_notes').select('*', { count: 'exact', head: true }).eq('user_id', user.id);
+      const { count } = await supabase!.from('study_notes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
       setDocCount(count || 0);
 
-      const { data: scores } = await supabase.from('quiz_scores').select('percentage').eq('user_id', user.id);
+      const { data: scores } = await supabase!.from('quiz_scores').select('percentage').eq('user_id', currentUser.id);
       if (scores && scores.length > 0) {
         setQuizzesTaken(scores.length);
         const totalPercentage = scores.reduce((sum, current) => sum + current.percentage, 0);
@@ -44,18 +49,26 @@ export default function HomePage() {
         setAvgScore(0);
       }
 
-      const { data: recent } = await supabase.from('study_notes').select('id, file_path, flashcards').eq('user_id', user.id).order('created_at', { ascending: false }).limit(3);
+      const { data: recent } = await supabase!.from('study_notes').select('id, file_path, flashcards').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(3);
       if (recent) setRecentNotes(recent);
 
+      // Fetch details for modals
+      const { data: allNotes } = await supabase!.from('study_notes').select('id, file_path, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      const { data: allScores } = await supabase!.from('quiz_scores').select('id, lesson_id, score, total_questions, percentage, created_at').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+      setStatsHistory({
+        docs: allNotes || [],
+        quizzes: allScores || []
+      });
+
       // Fetch Gamification Stats!
-      const { data: stats } = await supabase.from('user_stats').select('*').eq('user_id', user.id).single();
+      const { data: stats } = await supabase!.from('user_stats').select('*').eq('user_id', currentUser.id).single();
       if (stats) {
         setXp(stats.xp);
         setStreak(stats.current_streak);
       }
     }
     loadData();
-  }, [router]);
+  }, [user]);
 
   const getCleanTitle = (path: string) => {
     const parts = path.split('_');
@@ -109,9 +122,12 @@ export default function HomePage() {
               </svg>
               <span className="text-sm font-black text-violet-600 dark:text-violet-400">{currentLevel}</span>
             </div>
-            <div className="flex flex-col pr-2 w-20">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Level {currentLevel}</span>
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-50 mt-0.5 truncate">{currentLevelXp} / 500 XP</span>
+            <div className="flex flex-col pr-2 w-32">
+              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Level {currentLevel} Rank</span>
+              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-1 overflow-hidden">
+                <div className="bg-violet-600 dark:bg-violet-400 h-full rounded-full transition-all duration-1000" style={{ width: `${xpProgress}%` }} />
+              </div>
+              <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 mt-1 truncate">{currentLevelXp} / 500 XP to Lvl {currentLevel + 1}</span>
             </div>
           </div>
           
@@ -120,17 +136,26 @@ export default function HomePage() {
 
       {/* Classic Stats Row */}
       <div className="grid grid-cols-3 gap-2 md:gap-6 mb-5 md:mb-8">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+        <div 
+          onClick={() => setActiveModal('docs')} 
+          className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm hover:border-violet-300 dark:hover:border-violet-700 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] select-none"
+        >
           <BookOpen className="text-violet-500 dark:text-violet-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{docCount}</span>
           <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Documents</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+        <div 
+          onClick={() => setActiveModal('quizzes')} 
+          className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm hover:border-emerald-300 dark:hover:border-emerald-700 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] select-none"
+        >
           <BrainCircuit className="text-emerald-500 dark:text-emerald-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{quizzesTaken}</span>
           <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Quizzes</span>
         </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
+        <div 
+          onClick={() => setActiveModal('scores')} 
+          className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm hover:border-orange-300 dark:hover:border-orange-700 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] select-none"
+        >
           <Target className="text-orange-500 dark:text-orange-400 mb-2 md:w-8 md:h-8" size={20} />
           <span className="text-xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-50">{avgScore}%</span>
           <span className="text-[10px] md:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1">Avg Score</span>
@@ -218,6 +243,99 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Modal Dialogs */}
+      <AnimatePresence>
+        {activeModal && (
+          <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 transition-all duration-300" onClick={() => setActiveModal(null)}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] border border-slate-100 dark:border-slate-800 p-6 shadow-2xl overflow-hidden flex flex-col max-h-[80vh] transition-colors duration-300"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-black text-slate-900 dark:text-slate-50 tracking-tight">
+                  {activeModal === 'docs' && "Study Documents"}
+                  {activeModal === 'quizzes' && "Quiz History"}
+                  {activeModal === 'scores' && "Average Performance"}
+                </h3>
+                <button 
+                  onClick={() => setActiveModal(null)} 
+                  className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                {activeModal === 'docs' && (
+                  statsHistory.docs.length === 0 ? (
+                    <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-10 font-medium">No documents uploaded yet.</p>
+                  ) : (
+                    statsHistory.docs.map((doc) => (
+                      <div key={doc.id} className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100/50 dark:border-slate-800/50 rounded-2xl">
+                        <div className="flex flex-col truncate pr-4">
+                          <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">{getCleanTitle(doc.file_path)}</span>
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">{new Date(doc.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <Link href={`/library/${doc.id}`} className="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-all shrink-0">
+                          Open
+                        </Link>
+                      </div>
+                    ))
+                  )
+                )}
+
+                {activeModal === 'quizzes' && (
+                  statsHistory.quizzes.length === 0 ? (
+                    <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-10 font-medium">No quizzes completed yet.</p>
+                  ) : (
+                    statsHistory.quizzes.map((quiz) => (
+                      <div key={quiz.id} className="flex justify-between items-center p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100/50 dark:border-slate-800/50 rounded-2xl">
+                        <div className="flex flex-col truncate pr-4">
+                          <span className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">
+                            {getCleanTitle(statsHistory.docs.find(d => d.id === quiz.lesson_id)?.file_path || "Practice Quiz")}
+                          </span>
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-1">{new Date(quiz.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <span className={`px-3 py-1 rounded-xl text-xs font-extrabold border ${
+                          quiz.percentage >= 80 ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/30' :
+                          quiz.percentage >= 60 ? 'bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400 border-orange-200 dark:border-orange-900/30' :
+                          'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30'
+                        }`}>
+                          {quiz.score}/{quiz.total_questions} ({quiz.percentage}%)
+                        </span>
+                      </div>
+                    ))
+                  )
+                )}
+
+                {activeModal === 'scores' && (
+                  <div className="space-y-6">
+                    <div className="p-5 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-3xl text-center">
+                      <span className="text-3xl font-black">{avgScore}%</span>
+                      <p className="text-[10px] font-bold text-violet-200 uppercase tracking-wider mt-1.5">Average Performance score</p>
+                    </div>
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Historical Scores</h4>
+                      {statsHistory.quizzes.slice(0, 5).map((quiz) => (
+                        <div key={quiz.id} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          <span>{new Date(quiz.created_at).toLocaleDateString()}</span>
+                          <span className="font-bold">{quiz.percentage}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
     </main>

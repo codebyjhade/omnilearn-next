@@ -10,6 +10,7 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);
+  const [isDragActive, setIsDragActive] = useState(false);
   const router = useRouter();
   
   // Connect to our new Global Upload Manager
@@ -26,6 +27,36 @@ export default function UploadPage() {
     };
     checkUser();
   }, []);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setIsDragActive(true);
+    } else if (e.type === "dragleave") {
+      setIsDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragActive(false);
+    setError(null);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const selectedFile = e.dataTransfer.files[0];
+      if (selectedFile.type !== 'application/pdf') {
+        setError("Only PDF files are supported at this time.");
+        return;
+      }
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        setError("File size must be under 10MB.");
+        return;
+      }
+      setFile(selectedFile);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -62,7 +93,7 @@ export default function UploadPage() {
       if (!user) throw new Error("Authentication error");
 
       // 2. Upload to Supabase Storage
-      updateProgress(20, "Encrypting & uploading to server...");
+      updateProgress(20, "Uploading document to server...");
       const cleanFileName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
       const filePath = `${user.id}/${Date.now()}_${cleanFileName}`;
       
@@ -72,8 +103,11 @@ export default function UploadPage() {
         
       if (uploadError) throw uploadError;
 
+      // Upload complete
+      updateProgress(40, "AI is starting parsing concepts...");
+
       // 3. Trigger Gemini AI Backend
-      updateProgress(60, "AI is reading and extracting data...");
+      updateProgress(60, "AI is reading and extracting concepts...");
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,6 +115,9 @@ export default function UploadPage() {
       });
 
       if (!response.ok) throw new Error('AI generation failed');
+
+      // AI Finished generation
+      updateProgress(90, "Compiling interactive quiz suite & slide decks...");
 
       // 4. Success!
       updateProgress(100, "Study Kit ready! Redirecting...");
@@ -115,7 +152,17 @@ export default function UploadPage() {
         )}
 
         {!file ? (
-          <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[32px] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-10 py-20 text-center hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-300 group relative cursor-pointer">
+          <div 
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-[32px] bg-white dark:bg-slate-900 flex flex-col items-center justify-center p-10 py-20 text-center transition-all duration-300 group relative cursor-pointer ${
+              isDragActive 
+                ? 'border-violet-500 bg-violet-50/50 dark:bg-violet-950/20 scale-[1.01]' 
+                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+            }`}
+          >
             <input 
               type="file" 
               accept=".pdf" 
@@ -125,7 +172,9 @@ export default function UploadPage() {
             <div className="w-20 h-20 bg-violet-50 dark:bg-violet-900/20 rounded-full flex items-center justify-center text-violet-500 dark:text-violet-400 mb-6 group-hover:scale-110 transition-transform duration-300">
               <UploadCloud size={32} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">Tap or Drag a PDF</h3>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-2">
+              {isDragActive ? "Drop your PDF file here!" : "Tap or Drag a PDF"}
+            </h3>
             <p className="text-sm text-slate-400 dark:text-slate-500 font-medium max-w-[200px] leading-relaxed">
               Max file size 10MB. We'll handle the rest.
             </p>

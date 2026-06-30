@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       You are an expert AI professor. Read the attached PDF document and generate a study kit.
       Return ONLY a valid JSON object matching this exact structure:
       {
-        "summary": "A comprehensive 3-paragraph summary of the core concepts in the text. Format beautifully.",
+        "summary": "A beautifully formatted summary in Markdown. Start with a '### 📌 TL;DR' section (2-3 sentences summarizing the absolute core message). Next, add a '### 💡 Key Takeaways' section with bullet points of important concepts using bold words for crucial terms. Finally, write a '### 📖 Detailed Analysis' section summarizing details in 2 paragraphs.",
         "flashcards": [
           { "front": "Key Term or Concept", "back": "Detailed definition or explanation" }
         ],
@@ -50,7 +50,8 @@ export async function POST(req: Request) {
           {
             "question": "A challenging multiple-choice question based on the text?",
             "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctAnswerIndex": 0
+            "correctAnswerIndex": 0,
+            "explanation": "A detailed explanation of why the correct option is right and other options are incorrect."
           }
         ]
       }

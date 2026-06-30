@@ -3,44 +3,40 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import Link from "next/link";
-import { FileText, Trash2, Loader2 } from "lucide-react";
+import { FileText, Trash2, BookOpenText } from "lucide-react";
 import { Skeleton } from "@/components/Skeleton";
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 
 export default function LibraryPage() {
   const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { user } = useAuthGuard();
+
   useEffect(() => {
+    if (!user || !supabase) return;
+    const currentUser = user;
+    const fetchNotes = async () => {
+      try {
+        // Fetch actual data from your Supabase table
+        const { data, error } = await supabase!
+          .from('study_notes')
+          .select('id, file_path, created_at')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false });
+
+        if (data && !error) {
+          setNotes(data);
+        }
+      } catch (err) {
+        console.error("Error fetching library:", err);
+      } finally {
+        // This guarantees the spinner stops even if there's no data!
+        setLoading(false); 
+      }
+    };
     fetchNotes();
-  }, []);
-
-  const fetchNotes = async () => {
-    try {
-      if (!supabase) { setLoading(false); return; }
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !user) {
-        console.error("User not logged in");
-        return;
-      }
-
-      // Fetch actual data from your Supabase table
-      const { data, error } = await supabase
-        .from('study_notes')
-        .select('id, file_path, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (data && !error) {
-        setNotes(data);
-      }
-    } catch (err) {
-      console.error("Error fetching library:", err);
-    } finally {
-      // This guarantees the spinner stops even if there's no data!
-      setLoading(false); 
-    }
-  };
+  }, [user]);
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault(); // Prevents Next.js from navigating to the lesson page
@@ -90,8 +86,17 @@ export default function LibraryPage() {
           ))}
         </div>
       ) : notes.length === 0 ? (
-        <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-sm">
-          No study materials yet. Go to Upload!
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-[32px] p-8 py-16 text-center shadow-sm flex flex-col items-center justify-center transition-colors max-w-lg mx-auto mt-6">
+          <div className="w-20 h-20 bg-violet-50 dark:bg-violet-900/20 rounded-full flex items-center justify-center text-violet-500 dark:text-violet-400 mb-6">
+            <BookOpenText size={36} />
+          </div>
+          <h3 className="text-lg font-black text-slate-900 dark:text-slate-50 mb-2">Build Your Study Library</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium max-w-sm leading-relaxed mb-8">
+            Upload notes, lecture PDFs, or text chapters to generate summaries, 3D flashcards, and mock practice exams.
+          </p>
+          <Link href="/upload" className="px-6 py-3.5 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl text-sm font-extrabold shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all">
+            Upload First Document
+          </Link>
         </div>
       ) : (
         <div className="flex flex-col space-y-4">

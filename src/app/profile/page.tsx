@@ -5,40 +5,52 @@ import { supabase } from "../../lib/supabaseClient";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
+import { useAuthGuard } from "../../hooks/useAuthGuard"; 
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { user } = useAuthGuard();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [docCount, setDocCount] = useState(0);
+  const [quizzesTaken, setQuizzesTaken] = useState(0);
+  const [avgScore, setAvgScore] = useState(0);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [notificationsOn, setNotificationsOn] = useState(false);
 
   useEffect(() => {
+    if (!user || !supabase) return;
+    const currentUser = user;
     async function loadRealUserData() {
-      if (!supabase) { router.push("/"); return; }
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      // THE GUARD: If no user is logged in, kick them to the login page
-      if (!user) {
-        router.push("/");
-        return;
-      }
-
       // If they are logged in, load their real data
-      setEmail(user.email || "");
-      setUsername(user.email?.split('@')[0] || "Student");
+      setEmail(currentUser.email || "");
+      setUsername(currentUser.email?.split('@')[0] || "Student");
       
-      const { count } = await supabase
+      const { count } = await supabase!
         .from('study_notes')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .eq('user_id', currentUser.id);
         
       setDocCount(count || 0);
+
+      const { data: scores } = await supabase!
+        .from('quiz_scores')
+        .select('percentage')
+        .eq('user_id', currentUser.id);
+
+      if (scores && scores.length > 0) {
+        setQuizzesTaken(scores.length);
+        const totalPercentage = scores.reduce((sum, current) => sum + current.percentage, 0);
+        setAvgScore(Math.round(totalPercentage / scores.length));
+      } else {
+        setQuizzesTaken(0);
+        setAvgScore(0);
+      }
+
       setIsAuthLoading(false); // Turn off the loading screen
     }
     loadRealUserData();
-  }, [router]);
+  }, [user]);
 
   const handleSignOut = async () => {
     if (!supabase) { router.push("/"); return; }
@@ -75,12 +87,12 @@ export default function ProfilePage() {
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
           <BrainCircuit size={16} className="text-emerald-500 dark:text-emerald-400 mb-2" />
-          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0</span>
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">{quizzesTaken}</span>
           <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Quizzes</span>
         </div>
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm transition-colors">
           <Target size={16} className="text-orange-500 dark:text-orange-400 mb-2" />
-          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">0%</span>
+          <span className="text-lg font-bold text-slate-900 dark:text-slate-50">{avgScore}%</span>
           <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide mt-1">Avg Score</span>
         </div>
       </div>
