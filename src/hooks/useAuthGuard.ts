@@ -12,27 +12,32 @@ export function useAuthGuard() {
     const supabase = createClient();
     let active = true;
 
-    async function checkUser() {
-      try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!active) return;
-
-        if (currentUser) {
-          setUser(currentUser);
-        }
-      } catch (err) {
-        console.error("Auth guard error:", err);
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
+    // 1. Fetch initial session (resolves from local storage / cookies)
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (!active) return;
+      if (error) {
+        console.error("Error getting session:", error);
       }
-    }
+      if (session?.user) {
+        setUser(session.user);
+      }
+      setLoading(false);
+    });
 
-    checkUser();
+    // 2. Subscribe to auth changes to handle dynamic sign-in / sign-out and refreshes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!active) return;
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
 
     return () => {
       active = false;
+      subscription.unsubscribe();
     };
   }, []);
 

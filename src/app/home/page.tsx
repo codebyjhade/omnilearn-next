@@ -10,7 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
   const supabase = createClient();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("Student");
+  const [isNewUser, setIsNewUser] = useState(false);
   const [docCount, setDocCount] = useState(0);
   const [recentNotes, setRecentNotes] = useState<any[]>([]);
   const [quizzesTaken, setQuizzesTaken] = useState(0);
@@ -34,7 +35,17 @@ export default function HomePage() {
     if (!user || !supabase) return;
     const currentUser = user;
     async function loadData() {
-      setUsername(currentUser.email?.split('@')[0] || "Student");
+      // Determine Display Name
+      const metadata = currentUser.user_metadata || {};
+      const fullName = metadata.full_name || metadata.first_name || "";
+      const firstName = fullName.split(' ')[0] || currentUser.email?.split('@')[0] || "Student";
+      setUsername(firstName);
+
+      // Determine New vs Returning User
+      const createdAt = new Date(currentUser.created_at).getTime();
+      const lastSignIn = currentUser.last_sign_in_at ? new Date(currentUser.last_sign_in_at).getTime() : createdAt;
+      const isNew = Math.abs(lastSignIn - createdAt) < 60000;
+      setIsNewUser(isNew);
 
       // Fetch standard stats
       const { count } = await supabase!.from('study_notes').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
@@ -94,9 +105,11 @@ export default function HomePage() {
       {/* Gamified Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 md:mb-8 gap-4 md:gap-0">
         <div>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Welcome back,</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">
+            {!user ? "Welcome to" : isNewUser ? "Welcome," : "Welcome back,"}
+          </p>
           <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-slate-50 tracking-tight mt-1">
-            {username} 👋
+            {!user ? "OmniLearn!" : username} 👋
           </h1>
         </div>
         

@@ -298,11 +298,12 @@ export default function LessonView() {
 
   return (
     <div className="flex flex-col w-full min-h-screen bg-slate-50 dark:bg-slate-950 pb-24 relative transition-colors duration-300">
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 flex flex-col flex-1">
       
       {/* HEADER SECTION */}
       {quizState !== 'playing' && examState !== 'playing' && (
         <>
-          <div className="bg-slate-50 dark:bg-slate-950 px-6 pt-10 pb-4 sticky top-0 z-20 transition-colors duration-300">
+          <div className="bg-slate-50 dark:bg-slate-950 pt-10 pb-4 sticky top-0 z-20 transition-colors duration-300 w-full">
             {/* Dynamic Breadcrumbs */}
             <nav className="flex items-center space-x-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 mb-4 uppercase tracking-wider select-none">
               <button onClick={() => router.push('/library')} className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
@@ -318,7 +319,27 @@ export default function LessonView() {
                 {activeTab === 'exam' && "Exam Simulator"}
               </span>
             </nav>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 truncate tracking-tight">{title}</h1>
+
+            {/* Redesigned Eyebrow */}
+            <span className="text-xs font-bold text-violet-500 dark:text-violet-400 uppercase tracking-widest block mb-2">
+              {topics[0] || "STUDY MATERIAL"}
+            </span>
+
+            {/* Redesigned Title */}
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight select-text mb-2">
+              {title}
+            </h1>
+
+            {/* Redesigned Metadata Row */}
+            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-4">
+              <span>Study Module</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <span>{data.flashcards?.length || 0} Concept Cards</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+              <span>{data.quizzes?.length || 0} Quiz Questions</span>
+            </div>
+
+            {/* Topic Chips */}
             <div className="flex flex-wrap gap-2 mt-3">
               {topics.map((topic: string, i: number) => (
                 <button 
@@ -361,7 +382,7 @@ export default function LessonView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6 items-start" role="tabpanel" id="panel-summary" aria-labelledby="tab-summary">
             
             {/* Left Column: Summary Text */}
-            <div className="space-y-6 lg:sticky lg:top-[190px]">
+            <div className="max-w-3xl mx-auto space-y-6 lg:sticky lg:top-[190px] w-full">
               <button 
                 onClick={() => handleAskQuestion("Explain this entire summary to me like I am 5 years old using a fun, easy analogy.")}
                 className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all w-max"
@@ -765,23 +786,20 @@ export default function LessonView() {
             
             {/* The 3D Flashcard Deck Container */}
             <div 
-              className="relative rounded-[32px] min-h-[380px] w-full select-none cursor-pointer mb-6 animate-in zoom-in-95 duration-200"
-              style={{ perspective: "1000px" }}
+              className="relative group [perspective:1000px] rounded-[32px] min-h-[380px] w-full select-none cursor-pointer mb-6 animate-in zoom-in-95 duration-200"
               onClick={() => setIsFlipped(!isFlipped)}
             >
               {/* Inner card with 3D rotate transition */}
               <div 
-                className="w-full h-full min-h-[380px] rounded-[32px] relative transition-transform duration-500 shadow-lg"
+                className="relative w-full h-full min-h-[380px] rounded-[32px] transition-transform duration-500 ease-in-out [transform-style:preserve-3d] shadow-lg"
                 style={{ 
-                  transformStyle: "preserve-3d", 
                   transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)"
                 }}
               >
                 
                 {/* 🔴 CARD FRONT: Term (Rotates 0deg) */}
                 <div 
-                  className="absolute inset-0 p-8 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-[32px] flex flex-col justify-between"
-                  style={{ backfaceVisibility: "hidden" }}
+                  className="absolute inset-0 w-full h-full [backface-visibility:hidden] p-8 bg-gradient-to-br from-violet-600 to-indigo-600 text-white rounded-[32px] flex flex-col justify-between"
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="text-[10px] font-extrabold tracking-widest text-violet-200 uppercase">Flashcard {currentSlide + 1} of {data.flashcards.length}</span>
@@ -805,11 +823,7 @@ export default function LessonView() {
 
                 {/* 🟢 CARD BACK: Definition (Rotates 180deg) */}
                 <div 
-                  className="absolute inset-0 p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-[32px] flex flex-col justify-between"
-                  style={{ 
-                    backfaceVisibility: "hidden", 
-                    transform: "rotateY(180deg)"
-                  }}
+                  className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] p-8 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-800 dark:text-slate-100 rounded-[32px] flex flex-col justify-between"
                 >
                   <div className="flex justify-between items-center w-full">
                     <span className="text-[10px] font-extrabold tracking-widest text-slate-400 dark:text-slate-500 uppercase">Definition</span>
@@ -896,6 +910,7 @@ export default function LessonView() {
         )}
       </AnimatePresence>
 
+      </div>
       </div>
     </div>
   );

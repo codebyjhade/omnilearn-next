@@ -27,7 +27,7 @@ interface MockNote {
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 const MOCK = {
-  username: "Guest Explorer",
+  username: "Student",
   email: "explorer@omnilearn.app",
   docCount: 14,
   quizzesTaken: 28,
@@ -463,6 +463,134 @@ const ProfileTab = memo(function ProfileTab({ requireAuth }: TabProps) {
   );
 });
 
+// ─── Modal Auth Form ──────────────────────────────────────────────────────────
+function ModalAuthForm({ 
+  supabase, 
+  router, 
+  onClose 
+}: { 
+  supabase: ReturnType<typeof createClient>; 
+  router: ReturnType<typeof useRouter>; 
+  onClose: () => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      if (isSignUp) {
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (signUpError) {
+          setError(signUpError.message);
+        } else {
+          alert("Success! Check your email to confirm your registration.");
+          setIsSignUp(false);
+        }
+      } else {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          setError(signInError.message);
+        } else {
+          onClose();
+          router.push("/home");
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-col">
+      <div className="text-center mb-6 pr-6">
+        <h3 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
+          {isSignUp ? "Create Account" : "Welcome Back"}
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          {isSignUp 
+            ? "Sign up to start generating AI study kits" 
+            : "Sign in to access your library and notes"}
+        </p>
+      </div>
+
+      <form onSubmit={handleAuth} className="space-y-4">
+        {error && (
+          <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-2xl flex items-center gap-2">
+            <AlertCircle size={16} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider pl-1">Email Address</label>
+          <input 
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="you@example.com"
+            className="px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors w-full"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider pl-1">Password</label>
+          <input 
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="••••••••"
+            className="px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-colors w-full"
+          />
+        </div>
+
+        <button 
+          type="submit"
+          disabled={loading}
+          className="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-950 font-bold rounded-2xl hover:bg-slate-700 dark:hover:bg-slate-100 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm shadow-sm cursor-pointer"
+        >
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <span>{isSignUp ? "Sign Up" : "Sign In"}</span>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-6 text-center border-t border-slate-100 dark:border-slate-800/50 pt-4">
+        <button 
+          onClick={() => {
+            setIsSignUp(!isSignUp);
+            setError(null);
+          }}
+          className="text-xs font-bold text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300 transition-colors focus:outline-none"
+        >
+          {isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const supabase = createClient();
@@ -484,11 +612,13 @@ export default function LandingPage() {
     return () => { cancelled = true; };
   }, [router]);
 
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
   const requireAuth = useCallback((e?: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
-    router.push("/login");
-  }, [router]);
+    setIsAuthModalOpen(true);
+  }, []);
 
   const gridStroke = mounted && resolvedTheme === "dark" ? "#1e293b" : "#f1f5f9";
   const tickFill   = mounted && resolvedTheme === "dark" ? "#94a3b8" : "#64748b";
@@ -608,6 +738,32 @@ export default function LandingPage() {
           );
         })}
       </nav>
+
+      {/* ── AUTHENTICATION MODAL ──────────────────────────────────────────── */}
+      {isAuthModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setIsAuthModalOpen(false)}
+          />
+          
+          {/* Modal Container */}
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl z-10 animate-in fade-in zoom-in-95 duration-200 flex flex-col text-slate-900 dark:text-slate-50 transition-colors">
+            
+            {/* Close button */}
+            <button 
+              onClick={() => setIsAuthModalOpen(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-500 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-violet-500"
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+
+            <ModalAuthForm supabase={supabase} router={router} onClose={() => setIsAuthModalOpen(false)} />
+          </div>
+        </div>
+      )}
 
     </div>
   );
