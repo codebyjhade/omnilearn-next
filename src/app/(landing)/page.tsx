@@ -14,7 +14,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
 } from "recharts";
 import { useTheme } from "next-themes";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TabId = "home" | "upload" | "library" | "progress" | "profile";
@@ -465,6 +465,7 @@ const ProfileTab = memo(function ProfileTab({ requireAuth }: TabProps) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
+  const supabase = createClient();
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);

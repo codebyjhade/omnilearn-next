@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { createClient } from "../../lib/supabase/client";
 import Link from "next/link";
 import { Sparkles, ArrowRight, BookOpen, BrainCircuit, Target, Upload, BarChart2, BookOpenText, Flame, Trophy } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -9,6 +9,7 @@ import { useAuthGuard } from "../../hooks/useAuthGuard";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function HomePage() {
+  const supabase = createClient();
   const [username, setUsername] = useState("");
   const [docCount, setDocCount] = useState(0);
   const [recentNotes, setRecentNotes] = useState<any[]>([]);

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { createClient } from "../../lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useUpload } from "../../context/UploadContext";
 import { UploadCloud, FileText, AlertCircle, X } from "lucide-react";
 
 export default function UploadPage() {
+  const supabase = createClient();
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGuest, setIsGuest] = useState(false);

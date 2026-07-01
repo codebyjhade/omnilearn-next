@@ -1,8 +1,36 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+    
+    // Authenticate user
+    let user = null;
+    
+    // Check Authorization header first (for token-based clients)
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token);
+      if (!jwtError && jwtUser) {
+        user = jwtUser;
+      }
+    }
+    
+    // Fallback to session cookies
+    if (!user) {
+      const { data: { user: cookieUser }, error: cookieError } = await supabase.auth.getUser();
+      if (!cookieError && cookieUser) {
+        user = cookieUser;
+      }
+    }
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { message, summary } = await req.json();
     
     // Initialize Gemini using your secret key

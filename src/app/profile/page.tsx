@@ -1,13 +1,14 @@
 "use client";
 
 import { User, Shield, Bell, LogOut, BookOpen, BrainCircuit, Target } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient";
+import { createClient } from "../../lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { useAuthGuard } from "../../hooks/useAuthGuard"; 
 
 export default function ProfilePage() {
+  const supabase = createClient();
   const router = useRouter();
   const { user } = useAuthGuard();
   const [email, setEmail] = useState("");

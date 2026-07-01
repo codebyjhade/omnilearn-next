@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabaseClient";
+import { createClient } from "../../lib/supabase/client";
 import Link from "next/link";
 import { FileText, Trash2, BookOpenText } from "lucide-react";
 import { Skeleton } from "@/components/Skeleton";
 import { useAuthGuard } from "../../hooks/useAuthGuard";
 
 export default function LibraryPage() {
+  const supabase = createClient();
   const [notes, setNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 

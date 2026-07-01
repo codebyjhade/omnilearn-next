@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { supabase } from "../../../lib/supabaseClient";
+import { createClient } from "../../../lib/supabase/client";
 import { ArrowLeft, BookOpen, BrainCircuit, Presentation, FileQuestion, Sparkles, MessageSquare, Loader2, Settings2, Clock, AlertTriangle, Flame, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/Skeleton";
 import { useAuthGuard } from "../../../hooks/useAuthGuard";
 
 export default function LessonView() {
+  const supabase = createClient();
   const { id } = useParams();
   const router = useRouter();
   const { user, loading: authLoading } = useAuthGuard();

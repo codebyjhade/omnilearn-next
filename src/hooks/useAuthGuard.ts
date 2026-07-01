@@ -1,32 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 export function useAuthGuard() {
-  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
-      router.push("/");
-      return;
-    }
-
+    const supabase = createClient();
     let active = true;
 
     async function checkUser() {
-      const { data: { user: currentUser } } = await supabase!.auth.getUser();
-      if (!active) return;
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!active) return;
 
-      if (!currentUser) {
-        router.push("/");
-      } else {
-        setUser(currentUser);
-        setLoading(false);
+        if (currentUser) {
+          setUser(currentUser);
+        }
+      } catch (err) {
+        console.error("Auth guard error:", err);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
@@ -35,7 +34,7 @@ export function useAuthGuard() {
     return () => {
       active = false;
     };
-  }, [router]);
+  }, []);
 
   return { user, loading };
 }

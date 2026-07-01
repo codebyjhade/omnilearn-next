@@ -5,10 +5,11 @@ import { TrendingUp, Target, Clock, AlertCircle, Sparkles } from "lucide-react";
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts";
 import { useTheme } from "next-themes";
 import { useAuthGuard } from "../../hooks/useAuthGuard";
-import { supabase } from "../../lib/supabaseClient";
+import { createClient } from "../../lib/supabase/client";
 import Link from "next/link";
 
 export default function ProgressPage() {
+  const supabase = createClient();
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const { user, loading: authLoading } = useAuthGuard();

@@ -1,19 +1,43 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-
-// Initialize Supabase lazily so the module evaluates without env vars at build time
-function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error("Missing Supabase server configuration.");
-  return createClient(url, key);
-}
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createClient();
+    
+    // Authenticate user
+    let user = null;
+    
+    // Check Authorization header first (for token-based clients)
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const { data: { user: jwtUser }, error: jwtError } = await supabase.auth.getUser(token);
+      if (!jwtError && jwtUser) {
+        user = jwtUser;
+      }
+    }
+    
+    // Fallback to session cookies
+    if (!user) {
+      const { data: { user: cookieUser }, error: cookieError } = await supabase.auth.getUser();
+      if (!cookieError && cookieUser) {
+        user = cookieUser;
+      }
+    }
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { filePath } = await req.json();
-    const supabase = getSupabase();
+    
+    // Check path permissions (prevent directory traversal / accessing other users' files)
+    const pathOwnerId = filePath.split('/')[0];
+    if (pathOwnerId !== user.id) {
+      return NextResponse.json({ error: 'Forbidden: Access Denied' }, { status: 403 });
+    }
     
     // 1. Download the uploaded PDF from your Supabase Storage bucket
     const { data: fileData, error: downloadError } = await supabase
@@ -31,7 +55,7 @@ export async function POST(req: Request) {
     // 3. Wake up the Gemini AI 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
     
-    // 🔥 MAGIC TRICK: We force Gemini to respond ONLY in valid JSON format
+    // Force Gemini to respond ONLY in valid JSON format
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-2.5-flash',
       generationConfig: { responseMimeType: "application/json" } 
@@ -68,12 +92,9 @@ export async function POST(req: Request) {
     const jsonText = result.response.text();
     const studyData = JSON.parse(jsonText);
 
-    // 7. Extract the User ID from the filePath (Format: userId/filename.pdf)
-    const userId = filePath.split('/')[0];
-
-    // 8. Save the newly generated study kit permanently to the database
+    // 7. Save the newly generated study kit permanently to the database using the authenticated client
     const { error: dbError } = await supabase.from('study_notes').insert({
-      user_id: userId,
+      user_id: user.id, // Explicitly enforce user.id from the verified session
       file_path: filePath,
       summary: studyData.summary,
       flashcards: studyData.flashcards,
@@ -82,7 +103,7 @@ export async function POST(req: Request) {
 
     if (dbError) throw dbError;
 
-    // 9. Tell the frontend we finished successfully!
+    // 8. Tell the frontend we finished successfully!
     return NextResponse.json({ success: true });
 
   } catch (error) {
